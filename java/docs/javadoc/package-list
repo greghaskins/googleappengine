@@ -1,0 +1,6 @@
+com.google.appengine.api.datastore
+com.google.appengine.api.images
+com.google.appengine.api.mail
+com.google.appengine.api.memcache
+com.google.appengine.api.urlfetch
+com.google.appengine.api.users
