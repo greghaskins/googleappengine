@@ -1,0 +1,16 @@
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="2.5">
+  <servlet>
+    <servlet-name>rpc</servlet-name>
+    <servlet-class>
+      com.google.appengine.demos.somefamiliarhaunts.RPCHandler
+    </servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>rpc</servlet-name>
+    <url-pattern>/rpc/*</url-pattern>
+  </servlet-mapping>
+  <welcome-file-list>
+    <welcome-file>haunts.jsp</welcome-file>
+  </welcome-file-list>
+</web-app>
+

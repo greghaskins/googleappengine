@@ -1,0 +1,74 @@
+body {
+   text-align: center;
+   min-width: 750px;
+   font-family: arial;
+}
+div.wrapper { 
+   margin:0 auto; 
+   width:750px; 
+   text-align: left;
+}
+div.map { 
+   border: 2px solid #c3d9ff; 
+   width: 500px; 
+   height: 400px; 
+   float:left; 
+}
+div.list { 
+   border: 2px solid #c3d9ff; 
+   width: 200px; 
+   height: 400px; 
+   float:right; 
+   margin-left:25px; 
+}
+div.list div { 
+   padding: 2px;  
+   float: none; 
+   cursor: pointer;  
+}
+div.list div.item { 
+   border-bottom: 1px solid #aaa; 
+   padding:5px;  }
+div.list div div.remove {
+   font-family: arial; 
+   float: right; 
+   margin-top: 0px; 
+   margin-right: 2px; 
+   font-size: 11px; 
+   padding: 3px; 
+   background: #ddd url("static/img/button-background.gif") repeat-x 0 0;
+   border: 1px solid #aaa; 
+}
+div.list div.selection { 
+   background-color: #e6e6e6; 
+   padding: 5px;  
+}
+div.top { 
+   padding: 2px; 
+   clear: left; 
+   width: 700px; 
+}
+div.top form.left { 
+   float: left; 
+}
+div.top form.right { 
+   float: right; 
+}
+div.body { 
+   clear: left;  
+   width: 550px; 
+   display: block; 
+   text-align: right;
+}
+div.body table { 
+   margin-left: auto; 
+   margin-right: 110px; 
+}
+div.header {
+   width:740px;
+}
+div.login {
+   float:right;
+   margin-top:-50px;
+   font-size: 12px;
+}
