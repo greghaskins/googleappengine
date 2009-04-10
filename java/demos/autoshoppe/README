@@ -1,0 +1,77 @@
+Google App Engine Java Runtime SDK - AutoShoppe Demo
+
+AutoShoppe is a Spring MVC application thats demonstrates a couple of use
+cases from a typical used car store.
+
+Basic Flow:
+1. User logs in.
+2. User adds a car to the listing.
+3. User searches/explores the listings
+4. User buys a car from the search results screen.
+5. A mail is sent to the user confirming the 'buy' action.  
+
+Required Dependencies ( should be copied to war/WEB-INF/lib folder)
+ 
+Spring Framework ( http://www.springsource.org/download )
+1. spring-aop.jar
+2. spring-beans.jar
+3. spring-context.jar
+4. spring-core.jar
+5. spring-test.jar
+6. spring-web.jar
+7. spring-webmvc.jar
+8. spring-orm.jar
+9. spring-jdbc.jar
+10. spring-tx.jar
+
+AOP ( Included in Spring distribution)
+1. aopalliance.jar
+2. cglib-nodep-2.1_3.jar
+
+Apache commmons ( Included in Spring distribution )
+1. commons-collections.jar
+2. commons-logging.jar
+3. commons-pool.jar
+
+Google Json-Java library ( http://code.google.com/p/google-gson/ )
+1. gson-1.3.jar
+
+Servlet API
+1. servlet-api-2.4.jar
+
+JavaMail API ( Included in Spring distribution )
+1. activation.jar
+2. mail.jar
+
+AppEngine & ORM ( Bundled with SDK )
+Refer developer's guide.
+
+To get all of the dependencies on a Mac OS X, Linux, or other Unix derived
+system, you can use the following commands:
+
+wget http://google-gson.googlecode.com/files/gson-1.3-b2.jar 
+cp gson-1.3-b2.jar war/WEB-INF/lib/.
+wget http://s3.amazonaws.com/dist.springframework.org/release/SPR/spring-framework-2.5.6.zip 
+unzip spring-framework-2.5.6.zip
+cp spring-framework-2.5.6/dist/modules/*.jar war/WEB-INF/lib/.
+wget http://mirrors.24-7-solutions.net/pub/apache/commons/logging/binaries/commons-logging-1.1.1-bin.zip
+unzip commons-logging-1.1.1-bin.zip
+cp commons-logging-1.1.1/*.jar war/WEB-INF/lib/.
+wget http://apache.mirror99.com/commons/pool/binaries/commons-pool-1.4.zip
+unzip commons-pool-1.4.zip
+cp commons-pool-1.4/*.jar war/WEB-INF/lib/.
+wget http://apache.mirrors.biblionix.com/commons/collections/binaries/commons-collections-3.2.1-bin.zip
+unzip commons-collections-3.2.1-bin.zip
+cp commons-collections-3.2.1/commons-collections-3.2.1.jar war/WEB-INF/lib/.
+wget http://www.java2s.com/Code/JarDownload/aopalliance.jar.zip 
+unzip aopalliance.jar.zip
+mv aopalliance.jar war/WEB-INF/lib/.
+wget http://www.java2s.com/Code/JarDownload/cglib-nodep-2.1_3.jar.zip 
+unzip cglib-nodep-2.1_3.jar.zip
+mv cglib-nodep-2.1_3.jar war/WEB-INF/lib/.
+wget http://mirrors.ibiblio.org/pub/mirrors/maven/geronimo/jars/geronimo-activation-1.0.jar 
+mv geronimo-activation-1.0.jar war/WEB-INF/lib/.
+wget http://mirrors.ibiblio.org/pub/mirrors/maven/mule/dependencies/javax/mail/mail/1.3.3/mail-1.3.3.jar
+mv mail-1.3.3.jar war/WEB-INF/lib/.
+wget http://downloads.sourceforge.net/junit/junit-4.4.jar
+mv junit-4.4.jar war/WEB-INF/lib/.

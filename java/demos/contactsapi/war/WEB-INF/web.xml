@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app
+    xmlns="http://java.sun.com/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+    version="2.5">
+  <display-name>Contacts Data API Example</display-name>
+
+  <servlet>
+    <servlet-name>handle_token</servlet-name>
+    <servlet-class>com.google.appengine.demos.contactsapi.HandleTokenServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>show_image</servlet-name>
+    <servlet-class>com.google.appengine.demos.contactsapi.ShowImageServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>signout</servlet-name>
+    <servlet-class>com.google.appengine.demos.contactsapi.SignoutServlet</servlet-class>
+` </servlet>
+
+  <servlet-mapping>
+    <servlet-name>handle_token</servlet-name>
+    <url-pattern>/HandleToken</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>show_image</servlet-name>
+    <url-pattern>/ShowImage</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>signout</servlet-name>
+    <url-pattern>/Signout</url-pattern>
+  </servlet-mapping>
+
+  <context-param>
+    <param-name>application_name</param-name>
+    <param-value>contacts-api-demo</param-value>
+  </context-param>
+
+  <welcome-file-list>
+    <welcome-file>/home.jsp</welcome-file>
+  </welcome-file-list>
+
+</web-app>

@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <title>
+    User Activity Report
+  </title>
+  <script type="text/javascript" src="http://json.org/json2.js">
+  </script>
+  <script type="text/javascript" src="static/js/common.js">
+  </script>
+  <script type="text/javascript">
+    AutoShoppe.audit = {};
+    AutoShoppe.audit.heading = new Array();
+
+    AutoShoppe.audit.heading[0] = "User";
+    AutoShoppe.audit.heading[1] = "IP Address";
+    AutoShoppe.audit.heading[2] = "Method";
+    AutoShoppe.audit.heading[3] = "Request Time";
+    AutoShoppe.audit.heading[4] = "Duration";
+
+    AutoShoppe.audit.getServerData = function() {
+      var callback = AutoShoppe.audit.populateModels;
+      AutoShoppe.makeHttpRequest("/audit.records", callback, 'GET', 0, 0);
+    }
+
+    AutoShoppe.audit.populateModels = function (responseJson) {
+      var ul = document.createElement("div");
+      var values = JSON.parse(responseJson);
+      var html = [];
+      var oTable = document.createElement("TABLE");
+      var oTHead = document.createElement("THEAD");
+      var oTBody0 = document.createElement("TBODY");
+      var oTBody1 = document.createElement("TBODY");
+      var oTFoot = document.createElement("TFOOT");
+      var oCaption = document.createElement("CAPTION");
+      var oRow, oCell;
+      var i,j;
+      oTable.id = "restable";
+
+      // Insert the created elements into oTable.
+      oTable.appendChild(oTHead);
+      oTable.appendChild(oTBody0);
+      oTable.appendChild(oTBody1);
+      oTable.appendChild(oTFoot);
+      oTable.appendChild(oCaption);
+
+      // Set the table's border width and colors.
+      oTable.bgColor = "white";
+      oTable.style.width = "100%";
+      oRow = document.createElement("TR");
+      oTHead.appendChild(oRow);
+      oTHead.setAttribute("bgColor", "lightskyblue");
+
+      // Create and insert cells into the header row.
+      for (i = 0; i < AutoShoppe.audit.heading.length; i++) {
+        oCell = document.createElement("TH");
+        oCell.innerHTML = AutoShoppe.audit.heading[i];
+        oRow.appendChild(oCell);
+      }
+
+      // Insert rows and cells into bodies.
+      for (i = 0; i < values.length; i++) {
+        var oBody = oTBody1;
+        oBody.style.align = "center";
+        oRow = document.createElement("TR");
+        oBody.appendChild(oRow);
+        oCell = document.createElement("TD");
+        oCell.innerHTML = values[i]['user'];
+        oRow.appendChild(oCell);
+        oCell = document.createElement("TD");
+        oCell.innerHTML = '  ' + values[i]['IP'];
+        oRow.appendChild(oCell);
+        oCell = document.createElement("TD");
+        oCell.innerHTML = values[i]['method'];
+        oRow.appendChild(oCell);
+        oCell = document.createElement("TD");
+        oCell.innerHTML = '  ' + new Date(values[i]['logtime']);
+        oRow.appendChild(oCell);
+        oCell = document.createElement("TD");
+        oCell.innerHTML = ' ' + values[i]['time'] + ' ms';
+        oRow.appendChild(oCell);
+        if (i % 2 == 0) {
+          oRow.setAttribute("bgColor", "#BBBBBB");
+        } else {
+          oRow.setAttribute("bgColor", "#FFFFFF");
+        }
+        oRow.appendChild(oCell);
+      }
+
+      oTBody1.setAttribute("bgColor", "goldenrod");
+
+      /* Create and insert rows and cells into the footer row. Set the
+      innerHTML of the caption and position it at the bottom of the table.*/
+      oCaption.innerHTML = values.length + " Results";
+      oCaption.style.fontSize = "10px";
+      oCaption.align = "bottom";
+
+      // Insert the table into the document tree.
+      ul.appendChild(oTable);
+      var resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+      resultDiv.appendChild(ul);
+    }
+  </script>
+</head>
+<body onload="AutoShoppe.audit.getServerData();">
+<div id="result"
+     style="width:800px;border: solid 0 #000;margin:auto;font-family:sans-serif;font-size:12px ">
+  <p align="center"><img src="static/images/loading.gif" alt=""/><br/>Loading...</p>
+</div>
+</body>
+
+</html>
