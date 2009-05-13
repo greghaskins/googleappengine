@@ -23,7 +23,7 @@
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="appengine-web-appType">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:string" name="application"/>
       <xs:element type="xs:string" name="version"/>
       <xs:element type="ns:static-filesType" name="static-files" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
@@ -32,7 +32,8 @@
       <xs:element type="ns:env-variablesType" name="env-variables" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:boolean" name="ssl-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:boolean" name="sessions-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
-    </xs:sequence>
+      <xs:element type="ns:userPermissionsType" name="user-permissions" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+    </xs:all>
   </xs:complexType>
   <xs:complexType name="env-variablesType">
     <xs:sequence>
@@ -62,6 +63,20 @@
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute type="xs:string" name="path" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="userPermissionsType">
+    <xs:sequence>
+      <xs:element type="ns:permissionType" name="permission" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="permissionType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="class" use="required"/>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="actions" use="optional"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>

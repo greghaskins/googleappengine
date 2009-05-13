@@ -9,12 +9,12 @@
   </xs:complexType>
 
   <xs:complexType name="cron-Type">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:string" name="url"/>
-      <xs:element type="xs:string" name="description"/>
+      <xs:element type="xs:string" name="description" minOccurs="0"/>
       <xs:element type="xs:string" name="schedule"/>
-      <xs:element type="xs:string" name="timezone"/>
-    </xs:sequence>
+      <xs:element type="xs:string" name="timezone" minOccurs="0"/>
+    </xs:all>
   </xs:complexType>
 
 </xs:schema>

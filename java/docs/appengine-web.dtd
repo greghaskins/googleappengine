@@ -1,6 +1,6 @@
 <!ELEMENT appengine-web-app (application, version, static-files?, resource-files?,
                              system-properties?, env-variables?, ssl-enabled?,
-                             sessions-enabled?)>
+                             sessions-enabled?, user-permissions?)>
 <!ATTLIST appengine-web-app
           xmlns CDATA #REQUIRED>
 <!ELEMENT application (#PCDATA)>
@@ -25,3 +25,9 @@
           value CDATA #REQUIRED>
 <!ELEMENT ssl-enabled (#PCDATA)>
 <!ELEMENT sessions-enabled (#PCDATA)>
+<!ELEMENT user-permissions (permission)*>
+<!ELEMENT permission (#PCDATA)>
+<!ATTLIST permission
+          class CDATA #REQUIRED
+          name CDATA #REQUIRED
+	  actions CDATA #OPTIONAL>

@@ -28,7 +28,7 @@
     <sequential>
       <java classname="com.google.appengine.tools.KickStart"
             classpath="${appengine.tools.classpath}"
-            fork="true">
+            fork="true" failonerror="true">
         <arg value="com.google.appengine.tools.development.DevAppServerMain"/>
         <arg value="--port=@{port}"/>
         <arg value="--address=@{address}"/>
@@ -54,7 +54,7 @@
     <sequential>
       <java classname="com.google.appengine.tools.admin.AppCfg"
             classpath="${appengine.tools.classpath}"
-            fork="true">
+            fork="true" failonerror="true">
         <arg value="--disable_prompt"/>
         <options/>
         <arg value="@{action}"/>

@@ -1,6 +1,64 @@
 Release Notes for the Google App Engine ORM, a DataNucleus plugin that provides
 access to the Google App Engine Datastore via JDO and JPA.
 
+VERSION 1.0.1 RC2
+- Fix handling of user-defined @Order
+  http://code.google.com/p/datanucleus-appengine/issues/detail?id=40
+
+- Support field restrictions in queries
+  http://code.google.com/p/datanucleus-appengine/issues/detail?id=23
+
+- Fix NPE when querying for null parent
+  http://code.google.com/p/datanucleus-appengine/issues/detail?id=47
+  
+
+VERSION 1.0.1 RC1
+- Support contains operator in JDOQL
+  http://code.google.com/p/datanucleus-appengine/issues/detail?id=2
+
+- Support doubles as query literals
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=3
+
+- Support BigDecimal fields
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=4
+
+- Support persisting classes with superclasses
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=5
+
+- Support Collection fields with serialized="true"
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=6
+
+- Support @Lob JPA annotation
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=10
+
+- Support @Serialized on byte[] member
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=16
+
+- Bidirectional one-to-many when parent has long or unencoded String pk fails
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=19
+
+- Cannot fetch many side of one-to-many when pk is Key, Long, or unencoded String
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=26
+
+- JDOQL: Support implicit params
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=27
+
+- Cannot add child to existing one-to-many if parent has Long or unencoded String pk
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=28
+
+- Expose batch gets
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=29
+
+- Can't reattach detached objects with Date props
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=30
+
+- Fetching 1 to 1 needs to differentiate between direct and indirect children
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=31
+
+- Support embedded classes with Key primary key
+  http://code.google.com/p/datanucleus-appengine/issues/detail?can=7&id=32
+
+
 VERSION 1.0.0 Final
 - Fix automatic entity group assignment with non-transactional datasources.
 - Support aliased table names.

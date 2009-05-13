@@ -36,9 +36,9 @@ public class GetFlights extends HttpServlet {
       flights = queryJDO(query);
     }
     printQueryFlightForm(query, resp);
-    printTableHeader(resp);
 
     resp.getWriter().println("<table>");
+    printTableHeader(resp);
 
     printFlights(resp, flights);
     resp.getWriter().println("</table>");
