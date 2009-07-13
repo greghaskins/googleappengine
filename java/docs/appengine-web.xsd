@@ -33,6 +33,7 @@
       <xs:element type="xs:boolean" name="ssl-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:boolean" name="sessions-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:userPermissionsType" name="user-permissions" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      <xs:element type="xs:string" name="public-root" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="env-variablesType">

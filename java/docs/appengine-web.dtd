@@ -1,6 +1,6 @@
 <!ELEMENT appengine-web-app (application, version, static-files?, resource-files?,
                              system-properties?, env-variables?, ssl-enabled?,
-                             sessions-enabled?, user-permissions?)>
+                             sessions-enabled?, user-permissions?, public-root?)>
 <!ATTLIST appengine-web-app
           xmlns CDATA #REQUIRED>
 <!ELEMENT application (#PCDATA)>
@@ -31,3 +31,4 @@
           class CDATA #REQUIRED
           name CDATA #REQUIRED
 	  actions CDATA #OPTIONAL>
+<!ELEMENT public-root (#PCDATA)>
