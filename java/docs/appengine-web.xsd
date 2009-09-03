@@ -34,6 +34,7 @@
       <xs:element type="xs:boolean" name="sessions-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:userPermissionsType" name="user-permissions" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:string" name="public-root" minOccurs="0"/>
+      <xs:element type="ns:inboundServicesType" name="inbound-services" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="env-variablesType">
@@ -48,6 +49,13 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType name="staticIncludeType">
+    <xs:simpleContent>
+      <xs:extension base="ns:includeType" xmlns:ns="http://appengine.google.com/ns/1.0">
+        <xs:attribute type="ns:expirationType" name="expiration" use="optional" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name="resource-filesType">
     <xs:sequence>
       <xs:element type="ns:includeType" name="include" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
@@ -56,7 +64,7 @@
   </xs:complexType>
   <xs:complexType name="static-filesType">
     <xs:sequence>
-      <xs:element type="ns:includeType" name="include" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      <xs:element type="ns:staticIncludeType" name="include" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:excludeType" name="exclude" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
     </xs:sequence>
   </xs:complexType>
@@ -81,5 +89,15 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType name="inboundServicesType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="service" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="expirationType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\s*(([1-9][0-9]*)([DdHhMm]|[sS]?))(\s+([1-9][0-9]*)([DdHhMm]|[sS]?))*\s*"/>
+    </xs:restriction>
+  </xs:simpleType>
 </xs:schema>
 

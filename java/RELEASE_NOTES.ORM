@@ -1,7 +1,86 @@
 Release Notes for the Google App Engine ORM, a DataNucleus plugin that provides
 access to the Google App Engine Datastore via JDO and JPA.
 
+VERSION 1.0.3 Final
+- Support delete by query (JPA)
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=36
+
+- Support delete by query (JDO)
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=106
+
+- pm.makePersistentAll() should use batch puts
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=7
+
+- Query by key name when pk is encoded String or Key
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=11
+
+- Exception: {Primary keys are immutable} thrown when cascadingly deleting of chilren with "gae.pk-name" field
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=91
+
+- Make it clear that @Unique and @Uniques are not supported
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=22
+
+- Warn when child fields marked for Eager/Lazy fetching
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=13
+
+- Better error message for JPQL update statements
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=64
+
+- Queries don't respect fetch groups
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=58
+
+- Exception deleting object with gae.parent-pk field
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=87
+
+- Allow embedded field restrictions in queries (JDO/JPA)
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=51
+
+- Cannot modify two fields in the embedded class in one transaction
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=65
+
+- Add operator LIKE support for JPA
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=88
+
+- fail to serialize field that is PC -- message "Specified class class com.google.appengine.api.datastore.Blob is not persistable"
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=94
+
+- Collection<Byte> anomaly
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=95
+
+- Upgrade to DataNucleus 1.1.5
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=96
+
+- More sensible error when ancestor query param is null.
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=97
+
+- JPQL: MEMBER OF only supported when args are in the wrong order
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=99
+
+- Make it clear that ManyToMany is not supported
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=104
+
+- Issuing an ancestor query when a jdo/jpa txn has been started does not actually start a txn
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=105
+
+- pm.deletePersistentAll() should use batch deletes
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=108
+
+- Support sequences
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=110
+
+- JPA support for JPQL functions CURRENT_TIMESTAMP, CURRENT_DATE
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=111
+
+- Support 'is not null' in queries
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=116
+
+
 VERSION 1.0.2 Final
+N.B: This release includes a dependency on a patched version of DataNucleus core 1.1.4.
+The patch was necessary to work around a bug that prevented applications from starting
+when persistence.xml was located in a directory whose full path contained spaces.  The
+patch that was applied to DataNucleus core 1.1.4 can be found in appengine-sdk-1_2_2_patch.patch.
+
 - Fetched objects with multi-value props incorrectly marked dirty
   http://code.google.com/p/datanucleus-appengine/issues/detail?id=83
 
@@ -17,6 +96,7 @@ VERSION 1.0.2 Final
 
 - Work around DataNucleus bug preventing app from loading persistence.xml in a
   path containing spaces.
+
 
 VERSION 1.0.2 RC1
 - Upgrade to DataNucleus 1.1.4

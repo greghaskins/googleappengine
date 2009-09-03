@@ -82,12 +82,12 @@
     <delete dir="${war.dir}"/>
   </target>
 
-
-
-  <target name="dev_appserver" depends="war"
+  <target name="runserver" depends="war"
           description="Run the dev_appserver">
     <dev_appserver war="${war.dir}" port="${http.port}"/>
   </target>
+
+  <target name="dev_appserver" depends="runserver"/>
 
   <target name="debug" depends="war" 
           description="Launches dev_appserver with remote debugging enabled">
