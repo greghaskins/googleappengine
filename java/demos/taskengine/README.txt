@@ -28,5 +28,5 @@ How to build Task Engine:
    'ant'.
 
 
-To run TaskEngine locally in GWT hosted mode type:
+To run TaskEngine locally, type:
 'ant runserver'
