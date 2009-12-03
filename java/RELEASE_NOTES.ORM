@@ -1,6 +1,60 @@
 Release Notes for the Google App Engine ORM, a DataNucleus plugin that provides
 access to the Google App Engine Datastore via JDO and JPA.
 
+VERSION 1.0.4 RC2
+- Explicitly disallow multiple relationships of the same type
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=154
+
+- Occasional ArrayOutOfBoundsIndexException
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=156
+
+- Support inheritance
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=25
+
+- Support != queries
+
+- Support IN queries
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=39
+
+- Support datastore cursors
+
+VERSION 1.0.4 RC1
+- Inheritance is working for simple fields and embedded fields.  Relationships
+in base classes are completely untested and probably do not work.
+
+- Cannot add child to existing one-to-many if parent has Long or unencoded String pk
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=28
+
+- Can't query by embedded fields at depth > 1
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=120
+
+- Positional parameters don't work (JPQL)
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=128
+
+- Throw JDOCanRetryException when ConcurrentMod hit during txn commit
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=134
+
+- Respect JDOQL/JPQL case sensitivity for keywords, in particular "count"
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=139
+
+- Put all native datastore types in the default fetch group
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=143
+
+- Empty Set gets loaded from datastore as null
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=145
+
+- Cannot remove element of one to many when parent has pk of type Long or unencoded String
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=126
+
+- Severe problem when deleting a child object from an owned relationship (JDO)
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=135
+
+- NPE resulting from corrupt JDOQL query
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=136
+
+- Embedded, multi-value fields don't work
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=146
+
 VERSION 1.0.3 Final
 - Support delete by query (JPA)
 http://code.google.com/p/datanucleus-appengine/issues/detail?id=36
