@@ -24,8 +24,8 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.TextAreaElement;
-import com.google.gwt.libideas.resources.client.CssResource;
-import com.google.gwt.libideas.resources.client.ImageResource;
+import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
@@ -54,10 +54,10 @@ public class TaskDetails extends Page {
    */
   public interface Resources extends ControlBar.Resources,
       LabelMatrix.Resources {
-    @Resource("resources/back.png")
+    @Source("resources/back.png")
     ImageResource back();
 
-    @Resource("resources/TaskDetails.css")
+    @Source("resources/TaskDetails.css")
     TaskDetails.Css taskDetailsCss();
   }
 
@@ -108,10 +108,10 @@ public class TaskDetails extends Page {
     detailsField = Document.get().createTextAreaElement();
     contentElem.appendChild(createLabelledFieldGroup("Details:", detailsField));
 
-    saveButton = Document.get().createButtonElement();   
+    saveButton = Document.get().createPushButtonElement();   
     saveButton.getStyle().setPropertyPx("marginLeft", 15);
 
-    cancelButton = Document.get().createButtonElement();
+    cancelButton = Document.get().createPushButtonElement();
     cancelButton.getStyle().setPropertyPx("marginLeft", 75);
     cancelButton.setInnerText("Cancel");
 

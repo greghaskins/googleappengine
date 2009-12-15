@@ -19,12 +19,10 @@ How to build Task Engine:
 
 1. Install Apache ant.
 2. Download Java Appengine SDK.
-3. Download GWT 1.6.
-4. Download a build of GWT Incubator (gwt-incubator.jar).
-5. Add the correct path information for the Appengine SDK, GWT 1.6, and 
-   Incubator to 'taskengine/build.xml'. The top of build.xml should
-   clearly indicate where you need to edit. 
-6. Drop to the command line, and in the taskengine directory type:
+3. Download GWT 2.0 or later.
+4. Add the correct path information for the Appengine SDK, and GWT 2.0 
+   to 'taskengine/build.properties'.
+5. Drop to the command line, and in the taskengine directory type:
    'ant'.
 
 

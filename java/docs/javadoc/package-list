@@ -1,3 +1,4 @@
+com.google.appengine.api.blobstore
 com.google.appengine.api.datastore
 com.google.appengine.api.images
 com.google.appengine.api.labs.taskqueue
@@ -6,4 +7,5 @@ com.google.appengine.api.memcache
 com.google.appengine.api.quota
 com.google.appengine.api.urlfetch
 com.google.appengine.api.users
+com.google.appengine.api.utils
 com.google.appengine.api.xmpp

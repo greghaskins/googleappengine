@@ -1,12 +1,5 @@
 <project name="taskengine" default="compile" basedir=".">
-
-  <import file="build-gwt.xml"/>
-
-  <!-- YOU MUST CONFIGURE THESE FOR YOUR SYSTEM -->
-  <property name="appengine.java.sdk" location="../.." />
-  <property name="incubator.dir" location="../lib" />
-
-  <!-- ........................................ -->
+  <property file="build.properties"/>
 
   <!-- taskengine specifics configuration; edit these for a new project -->
   <property name="gwt.module" value="com.google.appengine.demos.taskengine.Tasks" />
@@ -15,23 +8,14 @@
   <!-- ............................................................ -->
 
   <!-- Computed variables -->
-  <property name="appengine.lib" location="${appengine.java.sdk}/lib" />
-  <property name="orm.lib" location="${appengine.java.sdk}/lib/tools/orm" />
+  <property name="appengine.lib" location="${appengine.home}/lib" />
+  <property name="orm.lib" location="${appengine.home}/lib/tools/orm" />
   <fail message="Cannot find AppEngine SDK; please reconfigure this build file">
     <condition><not><and>
       <available file="${appengine.lib}" type="dir"/>
       <available file="${orm.lib}" type="dir"/>
     </and></not></condition>
   </fail>
-
-  <condition property="macJVM.arg" value="-XstartOnFirstThread" else="">
-    <available file="${gwt.sdk.dir}/gwt-dev-mac.jar" />
-  </condition>  
-  <condition property="incubator.jar" value="${incubator.dir}/gwt-incubator.jar">
-    <available file="${incubator.dir}/gwt-incubator.jar" />
-  </condition>
-
-  <fail unless="incubator.jar" message="Cannot find Incubator JAR; please reconfigure this build file"/>
 
   <condition property="jdo.enable">
     <available file="src/META-INF/jdoconfig.xml" />
@@ -46,7 +30,7 @@
   
   <target name="runserver" depends="compile">
     <java classname="com.google.appengine.tools.development.DevAppServerMain"
-        classpath="${appengine.java.sdk}/lib/appengine-tools-api.jar"
+        classpath="${appengine.home}/lib/appengine-tools-api.jar"
         fork="true" >
       <arg value="war" />
     </java>
@@ -63,10 +47,9 @@
     <fileset dir="${orm.lib}">
       <include name="**/*.jar"/>
     </fileset>
-    <pathelement location="${gwt.sdk.dir}/gwt-servlet.jar"/>
-    <pathelement location="${gwt.sdk.dir}/gwt-user.jar" />
+    <pathelement location="${gwt.home}/gwt-servlet.jar"/>
+    <pathelement location="${gwt.home}/gwt-user.jar" />
     <pathelement location="${out.bin}"/>
-    <pathelement location="${incubator.jar}"/>
   </path>
 
   <target name="clean" description="Cleans this project's intermediate and output files">
@@ -77,6 +60,25 @@
   </target>
 
   <!-- Private build targets -->
+  <macrodef name="compile.gwtc">
+    <attribute name="module" />
+    <attribute name="srcdir" default="src" />
+    <attribute name="wardir" />
+    <attribute name="classpathref" />
+    <sequential>
+      <java dir="@{srcdir}"
+          classname="com.google.gwt.dev.Compiler"
+          classpathref="@{classpathref}"
+          fork="yes"
+          failonerror="true">
+        <jvmarg value="-Xmx512M"/>
+        <arg value="-war" />
+        <arg file="@{wardir}" />
+        <arg value="@{module}" />
+      </java>
+    </sequential>
+  </macrodef>
+
   <target name="_serverCode" depends="_enhance" />
   
   <target name="_enhance" depends="_javac" if="jdo.enable" > 
@@ -89,7 +91,7 @@
     </datanucleusenhancer>
   </target>
 
-  <target name="_javac" depends="gwt.checkdistro,_libs">
+  <target name="_javac">
     <mkdir dir="${out.bin}" />
     <javac srcdir="src" destdir="${out.bin}" debug="true" debuglevel="lines,vars,source"
         source="1.5" nowarn="true" encoding="utf-8">
@@ -100,8 +102,7 @@
         <fileset dir="${appengine.lib}/user">
           <include name="*.jar" />
         </fileset>
-        <pathelement location="${gwt.sdk.dir}/gwt-user.jar" />
-        <pathelement location="${incubator.jar}" />             
+        <pathelement location="${gwt.home}/gwt-user.jar" />
       </classpath>
     </javac>
     <copy todir="${out.bin}">
@@ -120,7 +121,7 @@
         <include name="*.jar" /> 
       </fileset>
     </copy>
-    <copy todir="${out.lib}" file="${gwt.sdk.dir}/gwt-servlet.jar" />
+    <copy todir="${out.lib}" file="${gwt.home}/gwt-servlet.jar" />
   </target>
 
   <target name="_jdoLibs" if="jdo.enable">
@@ -139,12 +140,11 @@
     </fileset>
     <pathelement path="src" />
     <pathelement location="${out.bin}" />
-    <fileset file="${gwt.sdk.dir}/gwt-user.jar" />
-    <fileset file="${gwt.sdk.dir}/gwt-dev-${gwt.platform}.jar" />
-    <pathelement location="${incubator.jar}"/>
+    <fileset file="${gwt.home}/gwt-user.jar" />
+    <fileset file="${gwt.home}/gwt-dev.jar" />
   </path>
 
-  <target name="_gwtc" depends="gwt.checkdistro,_javac">
+  <target name="_gwtc">
     <compile.gwtc module="${gwt.module}"
         srcdir="src"
         wardir="war"

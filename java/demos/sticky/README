@@ -8,19 +8,8 @@ Google Web Toolkit.
 
 To compile and run this sample in 3 easy steps:
 
-(1) DOWNLOAD GWT 1.6:
-Mac OS X
-http://google-web-toolkit.googlecode.com/files/gwt-mac-1.6.1.tar.gz
-
-Linux
-http://google-web-toolkit.googlecode.com/files/gwt-linux-1.6.1.tar.bz2
-
-Windows
-http://google-web-toolkit.googlecode.com/files/gwt-windows-1.6.1.zip
-
-
-Or you can rely on our ant target,
-ant get-gwt
+(1) DOWNLOAD GWT 2.0 or later from:
+http://code.google.com/webtoolkit/
 
 
 (2) COMPILE AND RUN:

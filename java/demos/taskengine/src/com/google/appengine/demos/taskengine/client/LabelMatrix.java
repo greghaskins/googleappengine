@@ -19,9 +19,9 @@ import com.google.appengine.demos.taskengine.shared.Label;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.libideas.resources.client.CssResource;
-import com.google.gwt.libideas.resources.client.ImageResource;
-import com.google.gwt.libideas.resources.client.ImmutableResourceBundle;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
@@ -65,14 +65,14 @@ public class LabelMatrix extends Widget {
   /**
    * Rotated text image labels.
    */
-  public interface Resources extends ImmutableResourceBundle {
-    @Resource("resources/important.png")
+  public interface Resources extends ClientBundle {
+    @Source("resources/important.png")
     ImageResource important();
 
-    @Resource("resources/LabelMatrix.css")
+    @Source("resources/LabelMatrix.css")
     LabelMatrix.Css labelMatrixCss();
 
-    @Resource("resources/not_important.png")
+    @Source("resources/not_important.png")
     ImageResource notImportant();
   }
 

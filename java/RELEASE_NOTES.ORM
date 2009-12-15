@@ -1,7 +1,18 @@
 Release Notes for the Google App Engine ORM, a DataNucleus plugin that provides
 access to the Google App Engine Datastore via JDO and JPA.
 
-VERSION 1.0.4 RC2
+VERSION 1.0.4.1 final
+- Incorrect exception for multiple fields of same type
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=172
+
+VERSION 1.0.4.1 RC1
+- Non-persistent base classes do not work
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=169
+
+- Relationships in abstract base classes don't work
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=171
+
+VERSION 1.0.4 Final
 - Explicitly disallow multiple relationships of the same type
 http://code.google.com/p/datanucleus-appengine/issues/detail?id=154
 

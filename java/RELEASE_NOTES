@@ -1,3 +1,11 @@
+Version 1.3.0
+=============
+  - Support for the new Blobstore API
+  - New com.google.appengine.runtime.{version,environment} system properties 
+    (and a SystemProperty accessor class)
+  - New sample applications for GWT 2.0
+  - Optimizations for many reflection operations
+
 Version 1.2.8
 =============
   - Support for JAXB. JAXB is included in JDK 1.6 (and App Engine's production

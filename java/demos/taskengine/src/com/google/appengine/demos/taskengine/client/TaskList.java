@@ -24,8 +24,8 @@ import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.libideas.resources.client.CssResource;
-import com.google.gwt.libideas.resources.client.ImageResource;
+import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 
@@ -68,19 +68,19 @@ public class TaskList extends Page {
    * 
    */
   public interface Resources extends ControlBar.Resources {
-    @Resource("resources/checkBox.png")
+    @Source("resources/checkBox.png")
     ImageResource checkBox();
 
-    @Resource("resources/check.png")
+    @Source("resources/check.png")
     ImageResource checkMark();
 
-    @Resource("resources/garbage.png")
+    @Source("resources/garbage.png")
     ImageResource garbage();
 
-    @Resource("resources/plus.png")
+    @Source("resources/plus.png")
     ImageResource plus();
 
-    @Resource("resources/TaskList.css")
+    @Source("resources/TaskList.css")
     TaskList.Css taskListCss();
   }
 

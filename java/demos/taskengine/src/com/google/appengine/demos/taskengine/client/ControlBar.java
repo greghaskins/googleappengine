@@ -18,11 +18,11 @@ package com.google.appengine.demos.taskengine.client;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.libideas.resources.client.CssResource;
-import com.google.gwt.libideas.resources.client.ImageResource;
-import com.google.gwt.libideas.resources.client.ImmutableResourceBundle;
-import com.google.gwt.libideas.resources.client.ImageResource.ImageOptions;
-import com.google.gwt.libideas.resources.client.ImageResource.RepeatStyle;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.resources.client.ImageResource.ImageOptions;
+import com.google.gwt.resources.client.ImageResource.RepeatStyle;
 import com.google.gwt.user.client.EventListener;
 
 import java.util.ArrayList;
@@ -94,14 +94,14 @@ public class ControlBar extends Widget {
   /**
    * Images and CssResources for the ControlBar.
    */
-  public interface Resources extends ImmutableResourceBundle {
-    @Resource("resources/ControlBar.css")
+  public interface Resources extends ClientBundle {
+    @Source("resources/ControlBar.css")
     Css controlBarCss();
 
-    @Resource("resources/logo.png")
+    @Source("resources/logo.png")
     ImageResource logo();
 
-    @Resource("resources/topBarBg.png")
+    @Source("resources/topBarBg.png")
     @ImageOptions(repeatStyle = RepeatStyle.Horizontal)
     ImageResource topBarBg();
   }
