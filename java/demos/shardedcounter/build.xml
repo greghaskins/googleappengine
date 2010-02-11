@@ -2,6 +2,8 @@
   <property name="project.dir" location="." />
   <property name="sdk.dir" location="../.." />
 
+  <import file="${sdk.dir}/config/user/ant-macros.xml" />
+
   <path id="project.classpath">
     <pathelement path="${project.dir}/war/WEB-INF/classes" />
     <fileset dir="${project.dir}/war/WEB-INF/lib">
@@ -55,13 +57,19 @@
     </datanucleusenhancer>
   </target>
 
-  <target name="runserver" depends="datanucleusenhance">
-    <java
-        fork="true"
-        classpath="${sdk.dir}/lib/appengine-tools-api.jar"
-        classname="com.google.appengine.tools.development.DevAppServerMain">
-      <arg value="${project.dir}/war" />
-    </java>
+  <target name="runserver" depends="datanucleusenhance"
+      description="Starts the development server.">
+    <dev_appserver war="${project.dir}/war" />
+  </target>
+
+  <target name="update" depends="datanucleusenhance"
+      description="Uploads the application to App Engine.">
+    <appcfg action="update" war="${project.dir}/war" />
+  </target>
+
+  <target name="rollback" depends="datanucleusenhance"
+      description="Rolls back an interrupted application update.">
+    <appcfg action="rollback" war="${project.dir}/war" />
   </target>
 
 </project>

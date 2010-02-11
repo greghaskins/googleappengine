@@ -26,9 +26,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import javax.cache.Cache;
-import javax.cache.CacheException;
-import javax.cache.CacheManager;
+import net.sf.jsr107cache.Cache;
+import net.sf.jsr107cache.CacheException;
+import net.sf.jsr107cache.CacheManager;
 
 /**
  * {@code FractalTileServlet} generates and serves image tiles that
@@ -154,7 +154,7 @@ public class FractalTileServlet extends HttpServlet {
   }
 
   /**
-   * Create a {@link Cache} from the default {@code javax.cache}
+   * Create a {@link Cache} from the default {@code net.sf.jsr107cache}
    * implementation with no custom properties.
    */
   private Cache createCache() throws ServletException {

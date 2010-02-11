@@ -1,7 +1,23 @@
 Release Notes for the Google App Engine ORM, a DataNucleus plugin that provides
 access to the Google App Engine Datastore via JDO and JPA.
 
-VERSION 1.0.4.1 final
+VERSION 1.0.5
+- Child object with custom pk column can't be saved
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=188
+
+- Queries with multiple contains() where one filter is on pk don't work
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=185
+
+- Throw exception when filtering or sorting by pk-id or pk-name fields
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=190
+
+- Throw exception when filtering or sorting by pk-id or pk-name fields
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=191
+
+- Store child keys in a multi-value property on the parent
+http://code.google.com/p/datanucleus-appengine/issues/detail?id=192
+
+VERSION 1.0.4.1 Final
 - Incorrect exception for multiple fields of same type
 http://code.google.com/p/datanucleus-appengine/issues/detail?id=172
 

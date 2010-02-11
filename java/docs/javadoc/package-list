@@ -9,3 +9,4 @@ com.google.appengine.api.urlfetch
 com.google.appengine.api.users
 com.google.appengine.api.utils
 com.google.appengine.api.xmpp
+com.google.apphosting.api

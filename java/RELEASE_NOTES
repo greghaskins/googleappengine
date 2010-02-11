@@ -1,7 +1,55 @@
+Version 1.3.1
+=============
+  - Datastore Query Cursors
+      http://code.google.com/appengine/docs/java/datastore/queriesandindexes.html#Query_Cursors
+  - Transactional Tasks
+  - Support for Custom Admin Console pages
+  - Java Precompilation is now on by default
+      Developers can opt-out of precompilation by setting the flag in
+      appengine-web.xml:
+      <precompilation-enabled>false</precompilation-enabled>
+  - New built-in support for unit testing (see appengine-testing.jar)
+      http://code.google.com/appengine/docs/java/tools/localunittesting.html
+      http://code.google.com/p/googleappengine/issues/detail?id=326
+  - net.sf.jsr107 package included as an alternative to the low-level
+    Memcache API
+  - javax.annotation.Resource/Resources added to the package whitelist
+  - New "month" and "synchronized" syntax for Cron configuration
+      http://code.google.com/appengine/docs/java/config/cron.html
+  - URLFetch supports asynchronous requests
+      http://code.google.com/p/googleappengine/issues/detail?id=1899
+  - appcfg.sh uses HTTPS for application deployment
+  - appcfg.sh adds request_logs --append
+  - Changes to the order queries without a specified sort order are returned
+    Only queries that use IN will see different results.
+  - Added support for multiple != filters on the same property
+  - Improved support for keys-only queries when using IN and != filters
+  - Support for ETags, If-matches, If-not-matches HTTP Headers, as well as 304
+    status codes now available on static files (not yet available on the
+    dev_appserver or Blobstore blobs)
+      http://code.google.com/p/googleappengine/issues/detail?id=575
+  - Fixed issue where the maximum transform count was enforced for composite
+    operations
+      http://code.google.com/p/googleappengine/issues/detail?id=1656
+  - Fixed issue with whitespace on the end of strings in web.xml
+      http://code.google.com/p/googleappengine/issues/detail?id=2242
+  - Fixed web.xml <error-page> entries for 404 error codes
+      http://code.google.com/p/googleappengine/issues/detail?id=1477
+  - Added validation prevent welcome-files with absolute paths
+      http://code.google.com/p/googleappengine/issues/detail?id=1249
+  - Fixed issue where cancelling a deployment in progress could unintentionally
+    corrupt the SDK
+      http://code.google.com/p/googleappengine/issues/detail?id=2255
+  - Fixed issue with QuotaService.getCpuTimeInMegaCycles() returning 0
+      http://code.google.com/p/googleappengine/issues/detail?id=2639
+  - Fixed issue where JSP exceptions will be incorrectly cast causing a 
+    ClassCastException
+      http://code.google.com/p/googleappengine/issues/detail?id=1438
+
 Version 1.3.0
 =============
   - Support for the new Blobstore API
-  - New com.google.appengine.runtime.{version,environment} system properties 
+  - New com.google.appengine.runtime.{version,environment} system properties
     (and a SystemProperty accessor class)
   - New sample applications for GWT 2.0
   - Optimizations for many reflection operations
@@ -14,9 +62,9 @@ Version 1.2.8
       http://code.google.com/p/googleappengine/issues/detail?id=1267
   - New support for application pre-compilation to reduce the length of
     loading requests. To enable pre-compilation on your application, add this
-    flag to your appengine-web.xml: 
-      <precompilation-enabled>true</precompilation-enabled>     
-    If you have trouble deploying your application, you should remove this 
+    flag to your appengine-web.xml:
+      <precompilation-enabled>true</precompilation-enabled>
+    If you have trouble deploying your application, you should remove this
     flag or set it to false.
   - Added Quota API (com.google.appengine.api.quota) to match Python API.
   - Low-level Memcache API now supports batchIncrement().

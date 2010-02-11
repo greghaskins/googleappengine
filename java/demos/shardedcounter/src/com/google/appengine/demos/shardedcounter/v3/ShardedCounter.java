@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import javax.cache.Cache;
-import javax.cache.CacheException;
-import javax.cache.CacheManager;
+import net.sf.jsr107cache.Cache;
+import net.sf.jsr107cache.CacheException;
+import net.sf.jsr107cache.CacheManager;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 

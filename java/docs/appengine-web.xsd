@@ -36,6 +36,7 @@
       <xs:element type="xs:string" name="public-root" minOccurs="0"/>
       <xs:element type="ns:inboundServicesType" name="inbound-services" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:boolean" name="precompilation-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      <xs:element type="ns:admin-console" name="admin-console" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="env-variablesType">
@@ -100,5 +101,18 @@
       <xs:pattern value="\s*(([1-9][0-9]*)([DdHhMm]|[sS]?))(\s+([1-9][0-9]*)([DdHhMm]|[sS]?))*\s*"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:complexType name="admin-console">
+    <xs:sequence>
+      <xs:element type="ns:admin-console-pageType" name="page" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="admin-console-pageType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="url" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
 </xs:schema>
 
