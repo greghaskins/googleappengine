@@ -1,6 +1,11 @@
 Release Notes for the Google App Engine ORM, a DataNucleus plugin that provides
 access to the Google App Engine Datastore via JDO and JPA.
 
+VERSION 1.0.6
+- Support default rpc deadlines and query-specific deadlines
+
+- Support default read consistency config and query-specific read consistency config
+
 VERSION 1.0.5
 - Child object with custom pk column can't be saved
 http://code.google.com/p/datanucleus-appengine/issues/detail?id=188

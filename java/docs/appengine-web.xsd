@@ -98,7 +98,7 @@
   </xs:complexType>
   <xs:simpleType name="expirationType">
     <xs:restriction base="xs:string">
-      <xs:pattern value="\s*(([1-9][0-9]*)([DdHhMm]|[sS]?))(\s+([1-9][0-9]*)([DdHhMm]|[sS]?))*\s*"/>
+      <xs:pattern value="\s*(([0-9]+)([DdHhMm]|[sS]?))(\s+([0-9]+)([DdHhMm]|[sS]?))*\s*"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="admin-console">

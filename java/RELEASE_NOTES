@@ -1,3 +1,26 @@
+Version 1.3.2
+=============
+- New API to read the contents of uploaded Blobs (fetch_data)
+    http://code.google.com/p/googleappengine/issues/detail?id=2536
+- URLFetch now supports accessing ports 80-90, 440-450, and 1024-65535
+- Mail API now allows common document formats as attachments
+    http://code.google.com/p/googleappengine/issues/detail?id=494
+- The Task Queue API now supports adding multiple tasks in a single call to
+  Queue.add()
+- Fixed charset handling for inbound emails
+    http://code.google.com/p/googleappengine/issues/detail?id=2326
+- Fixed issue with compositing background colors in dev_appserver
+- New feature in the datastore to specify whether to use strong or eventually
+  consistent reads (the default is strong)
+- New datastore feature allows setting deadlines for operations
+- Increased the maximum Task Queue refill rate from 20/s to 50/s
+- Support for IP blacklisting to prevent denial of service (DoS) attacks
+- App Stats is now available for the Java SDK in addition to Python
+- Fix issue with expiration times not being reset on Put on the Memchache API
+    http://code.google.com/p/googleappengine/issues/detail?id=1284
+- Fix issue preventing static files from being served when a servlet is mapped to root
+    http://code.google.com/p/googleappengine/issues/detail?id=1379
+
 Version 1.3.1
 =============
   - Datastore Query Cursors
