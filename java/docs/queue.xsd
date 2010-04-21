@@ -4,9 +4,16 @@
 
   <xs:complexType name="queue-entries-Type">
     <xs:sequence>
+      <xs:element type="total-storage-limit-Type" name="total-storage-limit" maxOccurs="1" minOccurs="0"/>
       <xs:element type="queue-Type" name="queue" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:simpleType name="total-storage-limit-Type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="([0-9]+(\.[0-9]*)?[BKMGT]?)"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="queue-Type">
     <xs:all>
