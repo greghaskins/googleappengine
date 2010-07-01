@@ -25,15 +25,13 @@
   <property name="out.lib" location="${out.webinf}/lib" />
   <property name="out.bin" location="${out.webinf}/classes" />
 
+  <import file="${appengine.home}/config/user/ant-macros.xml" />
+
   <!-- Public build targets -->
-  <target name="compile" depends="_gwtc, _serverCode" description="Builds server code and runs a GWT compile." />
+  <target name="compile" depends="_gwtc, _serverCode, _libs" description="Builds server code and runs a GWT compile." />
   
   <target name="runserver" depends="compile">
-    <java classname="com.google.appengine.tools.development.DevAppServerMain"
-        classpath="${appengine.home}/lib/appengine-tools-api.jar"
-        fork="true" >
-      <arg value="war" />
-    </java>
+    <dev_appserver war="war" />
   </target>
 
   <target name="server" depends="_serverCode" description="Run the AppEngine development server (does not run a GWT compile)">

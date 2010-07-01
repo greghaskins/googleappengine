@@ -1,3 +1,19 @@
+Version 1.3.5
+=============
+- Ability to configure the Task Queue storage limit with the
+  total-storage-limit field in the queue.xml file.
+- Task Queues now support up to 50 qps per queue, up from 50 qps per app.
+- Developers can programmatically access Blobs with BlobstoreInputStream, which
+  provides an InputStream view of a blob in Blobstore
+- Bulkloader transform helpers for lists and hierarchical keys were added.
+- remote_api_shell commands can be sent over HTTPS or HTTP.
+- Admin Console logs now include information on request time latency.
+- The datastore now supports both end cursors.
+- Fixed an issue where requesting /appstats would not properly direct to
+  /appstats/.
+- Fixed an issue with inconsistent URL mappings between the SDK and production.
+    http://code.google.com/p/googleappengine/issues/detail?id=2598
+
 Version 1.3.4
 =============
 - Client side bulkloader available with the Python SDK that has a new
