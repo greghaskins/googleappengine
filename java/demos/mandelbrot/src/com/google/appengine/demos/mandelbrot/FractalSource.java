@@ -18,7 +18,6 @@ package com.google.appengine.demos.mandelbrot;
  * A {@code FractalSource} represents a fractal image of arbitrary
  * size and resolution.
  *
- * @author schwardo@google.com (Don Schwarz)
  */
 public interface FractalSource {
   /**

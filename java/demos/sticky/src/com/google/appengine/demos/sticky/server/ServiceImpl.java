@@ -36,9 +36,8 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
  * The server-side RPC endpoint for {@link Service}.
- * 
- * @author knorton@google.com (Kelly Norton)
- * 
+ *
+ *
  */
 @SuppressWarnings("serial")
 public class ServiceImpl extends RemoteServiceServlet implements Service {
@@ -103,7 +102,7 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
   /**
    * A convenient way to get the current user and throw an exception if the user
    * isn't logged in.
-   * 
+   *
    * @param userService
    *          the user service to use
    * @return the current user

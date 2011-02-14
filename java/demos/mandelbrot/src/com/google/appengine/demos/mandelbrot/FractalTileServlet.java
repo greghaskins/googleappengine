@@ -49,8 +49,6 @@ import net.sf.jsr107cache.CacheManager;
  * practically limitless, so the percentage of the image that can be
  * stored in the cache at any given time is extraordinarily low.
  *
- * @author schwardo@google.com (Don Schwarz)
- * @author nickjohnson@google.com (Nick Johnson)
  */
 public class FractalTileServlet extends HttpServlet {
   private static final Logger logger = Logger.getLogger(FractalTileServlet.class.getName());

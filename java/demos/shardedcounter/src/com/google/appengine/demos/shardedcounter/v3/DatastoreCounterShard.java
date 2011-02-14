@@ -27,7 +27,6 @@ import javax.jdo.annotations.PrimaryKey;
  * An individual shard is written to infrequently to allow the counter in
  * aggregate to be incremented rapidly.
  *
- * @author j.s@google.com (Jeff Scudder)
  */
 @PersistenceCapable(identityType = IdentityType.APPLICATION)
 public class DatastoreCounterShard {
@@ -42,13 +41,13 @@ public class DatastoreCounterShard {
   private String counterName;
 
   @Persistent
-  private Integer count;  
+  private Integer count;
 
   public DatastoreCounterShard(String counterName, int shardNumber) {
     this(counterName, shardNumber, 0);
   }
 
-  public DatastoreCounterShard(String counterName, int shardNumber, 
+  public DatastoreCounterShard(String counterName, int shardNumber,
       int count) {
     this.counterName = counterName;
     this.shardNumber = new Integer(shardNumber);

@@ -24,13 +24,12 @@ import com.google.gwt.user.client.ui.ToggleButton;
 /**
  * A collection of static factories to create {@link CustomButton}s with various
  * state faces.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class Buttons {
   /**
    * Creates a {@link PushButton} with the specified face images and stylename.
-   * 
+   *
    * @param upImage
    *          the image to be used on the up face
    * @param hvImage
@@ -53,7 +52,7 @@ public class Buttons {
 
   /**
    * Creates a {@link PushButton} with the specified face images and stylename.
-   * 
+   *
    * @param upImage
    *          the image to be used on the up face
    * @param hvImage
@@ -74,7 +73,7 @@ public class Buttons {
 
   /**
    * Creates a {@link PushButton} with the specified face images and stylename.
-   * 
+   *
    * @param upImage
    *          the image to be used on the up face
    * @param styleName
@@ -93,7 +92,7 @@ public class Buttons {
   /**
    * Creates a {@link ToggleButton} with the specified face images and
    * stylename.
-   * 
+   *
    * @param upImage
    *          the image to be used on the up face
    * @param hvImage
@@ -117,7 +116,7 @@ public class Buttons {
   /**
    * Creates a {@link ToggleButton} with the specified face images and
    * stylename.
-   * 
+   *
    * @param upImage
    *          the image to be used on the up face
    * @param hvImage
@@ -139,7 +138,7 @@ public class Buttons {
   /**
    * Creates a {@link ToggleButton} with the specified face images and
    * stylename.
-   * 
+   *
    * @param upImage
    *          the image to be used on the up face
    * @param styleName

@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
  *
  * Through the form, the user can increment the counter or add new shards.
  *
- * @author j.s@google.com (Jeff Scudder)
  */
 public class CounterPage extends HttpServlet {
 
@@ -78,7 +77,7 @@ public class CounterPage extends HttpServlet {
 
   private void displayCount(ShardedCounter counter, HttpServletResponse resp)
       throws IOException {
-    resp.getWriter().println("  <p>Current count: " + counter.getCount() 
+    resp.getWriter().println("  <p>Current count: " + counter.getCount()
         + "</p>");
   }
 

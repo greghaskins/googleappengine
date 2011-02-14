@@ -40,9 +40,8 @@ import com.google.appengine.api.users.User;
  * Creating a {@link Store} is relatively expensive so one should be mindful not
  * to create these unnecessarily. For example, in a servlet, the Store should be
  * stored as a field in the store to avoid creating it on every request.
- * 
- * @author knorton@google.com (Kelly Norton)
- * 
+ *
+ *
  */
 public class Store {
 
@@ -59,7 +58,7 @@ public class Store {
 
     /**
      * Begin a new transaction.
-     * 
+     *
      * @return the transaction
      */
     public Transaction begin() {
@@ -83,7 +82,7 @@ public class Store {
 
     /**
      * Gets the author by email.
-     * 
+     *
      * @param email
      *          the author's email
      * @return the author
@@ -95,7 +94,7 @@ public class Store {
 
     /**
      * Gets a note from the data store.
-     * 
+     *
      * @param key
      *          the note's key
      * @return
@@ -108,7 +107,7 @@ public class Store {
      * Looks in the data store for an author with a matching email. If the
      * author does not exist, a new one will be created. The newly created
      * author will also have access to a newly created surface.
-     * 
+     *
      * @param user
      *          the user for which an author object is needed
      * @return an author object
@@ -139,7 +138,7 @@ public class Store {
 
     /**
      * Gets a surface from the data store.
-     * 
+     *
      * @param key
      *          the surface's key
      * @return
@@ -150,7 +149,7 @@ public class Store {
 
     /**
      * Persist an author to the data store.
-     * 
+     *
      * @param author
      *          the author to be persisted
      * @return <code>author</code>, for call chaining
@@ -161,7 +160,7 @@ public class Store {
 
     /**
      * Persist a note to the data store.
-     * 
+     *
      * @param note
      *          the note to be persisted
      * @return <code>note</code>, for call chaining
@@ -173,7 +172,7 @@ public class Store {
 
     /**
      * Persist a surface to the data store.
-     * 
+     *
      * @param surface
      *          the surface to be persisted
      * @return <code>surface</code>, for call chaining
@@ -187,7 +186,7 @@ public class Store {
     /**
      * Attempts to get the author with the given email. If there is no known
      * author with that email, <code>null</code> will be returned.
-     * 
+     *
      * @param email
      *          the author's email
      * @return the author or <code>null</code> if the author can't be found
@@ -227,7 +226,7 @@ public class Store {
 
     /**
      * Construct a new author.
-     * 
+     *
      * @param email
      *          the author's email
      * @param name
@@ -240,7 +239,7 @@ public class Store {
 
     /**
      * Give this author access to a surface.
-     * 
+     *
      * @param surface
      *          the surface the author is being granted access to.
      */
@@ -252,7 +251,7 @@ public class Store {
 
     /**
      * Gets the author's email.
-     * 
+     *
      * @return
      */
     public String getEmail() {
@@ -261,7 +260,7 @@ public class Store {
 
     /**
      * Gets the author's name.
-     * 
+     *
      * @return
      */
     public String getName() {
@@ -270,7 +269,7 @@ public class Store {
 
     /**
      * Returns the keys for each surface that the author has access to.
-     * 
+     *
      * @return
      */
     public List<Key> getSurfaceKeys() {
@@ -279,7 +278,7 @@ public class Store {
 
     /**
      * Returns whether this author has access to a particular surface.
-     * 
+     *
      * @param surfaceKey
      *          the key of the surface
      * @return <code>true</code> if the author does have access,
@@ -296,7 +295,7 @@ public class Store {
 
     /**
      * Sets the author's email.
-     * 
+     *
      * @param email
      */
     public void setEmail(String email) {
@@ -305,7 +304,7 @@ public class Store {
 
     /**
      * Sets the author's name.
-     * 
+     *
      * @param name
      */
     public void setName(String name) {
@@ -315,7 +314,7 @@ public class Store {
     /**
      * Reassigns the collection of surface keys. This is required to ensure that
      * the ORM will persist element collections.
-     * 
+     *
      * @param keys
      */
     private void setSurfaceKeys(List<Key> keys) {
@@ -350,7 +349,7 @@ public class Store {
 
     /**
      * The width of the note.
-     * 
+     *
      * <p>
      * NOTE: The application does not currently provide the ability to resize
      * notes.
@@ -361,7 +360,7 @@ public class Store {
 
     /**
      * The height of the note
-     * 
+     *
      * <p>
      * NOTE: The application does not currently provide the ability to resize
      * notes.
@@ -396,7 +395,7 @@ public class Store {
 
     /**
      * Create a new note.
-     * 
+     *
      * @param owner
      *          the author who created this note
      * @param x
@@ -415,7 +414,7 @@ public class Store {
 
     /**
      * The author's email.
-     * 
+     *
      * @return
      */
     public String getAuthorEmail() {
@@ -424,7 +423,7 @@ public class Store {
 
     /**
      * The author's name.
-     * 
+     *
      * @return
      */
     public String getAuthorName() {
@@ -434,7 +433,7 @@ public class Store {
     /**
      * The text of the note. This value is not escaped in anyway and should
      * never be used as html on the client.
-     * 
+     *
      * @return unsafe text content
      */
     public String getContent() {
@@ -443,7 +442,7 @@ public class Store {
 
     /**
      * Gets the height of the note.
-     * 
+     *
      * @return
      */
     public int getHeight() {
@@ -452,7 +451,7 @@ public class Store {
 
     /**
      * Gets the object's primary key.
-     * 
+     *
      * @return
      */
     public Key getKey() {
@@ -461,7 +460,7 @@ public class Store {
 
     /**
      * Gets the date of the last time this object was persisted.
-     * 
+     *
      * @return
      */
     public Date getLastUpdatedAt() {
@@ -470,7 +469,7 @@ public class Store {
 
     /**
      * Gets the width of the note.
-     * 
+     *
      * @return
      */
     public int getWidth() {
@@ -479,7 +478,7 @@ public class Store {
 
     /**
      * Gets the x position of the note.
-     * 
+     *
      * @return
      */
     public int getX() {
@@ -488,7 +487,7 @@ public class Store {
 
     /**
      * Gets the y position of the note.
-     * 
+     *
      * @return
      */
     public int getY() {
@@ -497,7 +496,7 @@ public class Store {
 
     /**
      * Indicates whether the given author is the owner of this note.
-     * 
+     *
      * @param author
      *          the author
      * @return <code>true</code> if <code>author</code> is the owner of the
@@ -509,7 +508,7 @@ public class Store {
 
     /**
      * Sets the content.
-     * 
+     *
      * @param content
      */
     public void setContent(String content) {
@@ -518,7 +517,7 @@ public class Store {
 
     /**
      * Sets the height of the note.
-     * 
+     *
      * @param height
      */
     public void setHeight(int height) {
@@ -527,7 +526,7 @@ public class Store {
 
     /**
      * Sets the width of the note.
-     * 
+     *
      * @param width
      */
     public void setWidth(int width) {
@@ -536,7 +535,7 @@ public class Store {
 
     /**
      * Sets the x position of the note.
-     * 
+     *
      * @param x
      */
     public void setX(int x) {
@@ -545,7 +544,7 @@ public class Store {
 
     /**
      * Sets the y position of the note.
-     * 
+     *
      * @param y
      */
     public void setY(int y) {
@@ -591,7 +590,7 @@ public class Store {
 
     /**
      * Create a new surface.
-     * 
+     *
      * @param title
      */
     public Surface(String title) {
@@ -601,7 +600,7 @@ public class Store {
     /**
      * Add the name to the author names. Calls to this method are generally
      * paired with a call to {@link Author#addSurface(Surface)}.
-     * 
+     *
      * @param name
      */
     public void addAuthorName(String name) {
@@ -612,7 +611,7 @@ public class Store {
 
     /**
      * Gets the collection of author names.
-     * 
+     *
      * @return
      */
     public List<String> getAuthorNames() {
@@ -621,7 +620,7 @@ public class Store {
 
     /**
      * Gets the primary key for this object.
-     * 
+     *
      * @return
      */
     public Key getKey() {
@@ -630,7 +629,7 @@ public class Store {
 
     /**
      * Gets the date of the last time this object was persisted.
-     * 
+     *
      * @return
      */
     public Date getLastUpdatedAt() {
@@ -639,7 +638,7 @@ public class Store {
 
     /**
      * Gets all the notes that are stuck to this surface.
-     * 
+     *
      * @return
      */
     public List<Note> getNotes() {
@@ -648,7 +647,7 @@ public class Store {
 
     /**
      * Get the surface's title.
-     * 
+     *
      * @return
      */
     public String getTitle() {
@@ -657,7 +656,7 @@ public class Store {
 
     /**
      * Sets the surface's title.
-     * 
+     *
      * @param title
      */
     public void setTitle(String title) {
@@ -667,7 +666,7 @@ public class Store {
     /**
      * Reassigns the collection of author names. This is required to ensure that
      * the ORM persists element collections.
-     * 
+     *
      * @param names
      */
     private void setAuthorNames(List<String> names) {
@@ -679,7 +678,7 @@ public class Store {
 
   /**
    * Create a new Store based on a particular config.
-   * 
+   *
    * @param config
    */
   public Store(String config) {
@@ -688,7 +687,7 @@ public class Store {
 
   /**
    * Starts a data store session and returns an Api object to use.
-   * 
+   *
    * @return
    */
   public Api getApi() {

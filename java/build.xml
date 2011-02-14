@@ -1,0 +1,106 @@
+<project name="appengine_java_sdk" default="dist">
+
+  <property name="root.dir" location="."/>
+
+  <property name="src.dir" location="${root.dir}/src"/>
+  <property name="generated.dir" location="${src.dir}/generated"/>
+
+  <property name="build.dir" location="${root.dir}/build"/>
+  <property name="dist.dir" location="${build.dir}/dist"/>
+
+  <property name="api.version" value="1.0"/>
+  <property name="version" value="SNAPSHOT"/>
+
+  <target name="init">
+  </target>
+
+  <target name="build-sdk" depends="init">
+    <unzip src="${generated.dir}/appengine-java-sdk.zip" dest="${build.dir}"/>
+    <unzip src="${generated.dir}/appengine-orm.zip" dest="${build.dir}/appengine-java-sdk"/>
+
+    <ant antfile="${root.dir}/demos/guestbook/build.xml"
+         dir="${root.dir}/demos/guestbook">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <copy todir="${build.dir}/appengine-java-sdk/demos">
+      <fileset dir="${root.dir}/demos"/>
+    </copy>
+    <!-- Ant 1.7 strips file permissions when extracting zips, so add the execute bit back in. -->
+    <chmod dir="${build.dir}/appengine-java-sdk/bin" perm="ugo+rx" includes="**/*.sh"/>
+  </target>
+
+  <target name="build-demos" depends="build-sdk">
+    <ant antfile="${root.dir}/demos/guestbook/build.xml"
+	 dir="${root.dir}/demos/guestbook">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/helloxmpp/build.xml"
+	 dir="${root.dir}/demos/helloxmpp">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/jdoexamples/build.xml"
+	 dir="${root.dir}/demos/jdoexamples">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/mandelbrot/build.xml"
+	 dir="${root.dir}/demos/mandelbrot">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/new_project_template/build.xml"
+	 dir="${root.dir}/demos/new_project_template">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/shardedcounter/build.xml"
+	 dir="${root.dir}/demos/shardedcounter">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/taskqueueexamples/build.xml"
+	 dir="${root.dir}/demos/taskqueueexamples">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+
+<!-- These demos require a GWT installation:
+    <ant antfile="${root.dir}/demos/sticky/build.xml"
+	 dir="${root.dir}/demos/sticky">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/taskengine/build.xml"
+	 dir="${root.dir}/demos/taskengine">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+-->
+  </target>
+
+  <target name="dist" depends="build-sdk">
+    <mkdir dir="${dist.dir}"/>
+    <copy todir="${dist.dir}/appengine-java-sdk-${version}">
+      <fileset dir="${build.dir}/appengine-java-sdk"/>
+    </copy>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api-${api.version}-sdk-${version}.jar"/>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api-labs.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api-labs-${version}.jar"/>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-jsr107cache.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-jsr107cache-${version}.jar"/>
+
+    <!-- Ant 1.7 does not preserve file permissions when creating zips, so we first create a tar. -->
+    <tar destfile="${dist.dir}/appengine-java-sdk-${version}.tar">
+       <tarfileset dir="${dist.dir}">
+         <include name="appengine-java-sdk-${version}/**"/>
+         <exclude name="**/*.sh"/>
+       </tarfileset>
+       <tarfileset dir="${dist.dir}" filemode="755">
+         <include name="appengine-java-sdk-${version}/**/*.sh"/>
+       </tarfileset>
+    </tar>
+
+    <zip destfile="${dist.dir}/appengine-java-sdk-${version}.zip">
+       <tarfileset src="${dist.dir}/appengine-java-sdk-${version}.tar"/>
+    </zip>
+  </target>
+
+  <target name="clean"
+          description="Force a clean build">
+    <delete dir="${build.dir}"/>
+  </target>
+</project>

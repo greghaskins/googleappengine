@@ -31,7 +31,6 @@ import javax.jdo.Query;
  * quickly, increase the number of shards to divide the load. Performs
  * datastore operations using JDO.
  *
- * @author j.s@google.com (Jeff Scudder)
  */
 public class ShardedCounter {
   private String counterName;
@@ -46,7 +45,7 @@ public class ShardedCounter {
 
   private Counter getThisCounter(PersistenceManager pm) {
     Counter current = null;
-    Query thisCounterQuery = pm.newQuery(Counter.class, 
+    Query thisCounterQuery = pm.newQuery(Counter.class,
         "counterName == nameParam");
     thisCounterQuery.declareParameters("String nameParam");
     List<Counter> counter = (List<Counter>) thisCounterQuery.execute(
@@ -75,7 +74,7 @@ public class ShardedCounter {
     PersistenceManager pm = PMF.get().getPersistenceManager();
 
     try {
-      Query shardsQuery = pm.newQuery(CounterShard.class, 
+      Query shardsQuery = pm.newQuery(CounterShard.class,
                                       "counterName == nameParam");
       shardsQuery.declareParameters("String nameParam");
       List<CounterShard> shards = (List<CounterShard>) shardsQuery.execute(
@@ -158,7 +157,7 @@ public class ShardedCounter {
     // Choose the shard randomly from the available shards.
     Random generator = new Random();
     int shardNum = generator.nextInt(shardCount);
-    
+
     pm = PMF.get().getPersistenceManager();
     try {
       Query randomShardQuery = pm.newQuery(CounterShard.class);
@@ -171,7 +170,7 @@ public class ShardedCounter {
         CounterShard shard = shards.get(0);
         shard.increment(count);
         pm.makePersistent(shard);
-      } 
+      }
     } finally {
       pm.close();
     }

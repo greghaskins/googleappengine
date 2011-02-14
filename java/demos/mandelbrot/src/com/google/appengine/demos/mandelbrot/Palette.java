@@ -19,8 +19,6 @@ package com.google.appengine.demos.mandelbrot;
  * that the difference between two input values is reflected in the
  * difference between the colors that are returned.
  *
- * @author nickjohnson@google.com (Nick Johnson)
- * @author schwardo@google.com (Don Schwarz)
  */
 public class Palette {
   private static final int PALETTE[] = new int[] {

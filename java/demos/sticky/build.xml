@@ -23,23 +23,23 @@
   <path id="backend.classpath">
     <pathelement path="war/WEB-INF/classes" />
     <fileset dir="war/WEB-INF/lib" includes="**/*.jar" />
-    <fileset dir="${appengine.home}/lib" includes="shared/**/*.jar" />
+    <fileset dir="${appengine.sdk}/lib" includes="shared/**/*.jar" />
   </path>
 
   <path id="frontend.classpath">
     <pathelement path="src" />
-    <fileset file="${gwt.home}/gwt-user.jar" />
-    <fileset file="${gwt.home}/gwt-dev.jar" />
+    <fileset file="${gwt.sdk}/gwt-user.jar" />
+    <fileset file="${gwt.sdk}/gwt-dev.jar" />
   </path>
 
   <target name="copyjars" >
     <copy todir="war/WEB-INF/lib"
         flatten="true">
-      <fileset dir="${appengine.home}/lib/user"
+      <fileset dir="${appengine.sdk}/lib/user"
           includes="**/*.jar" />
     </copy>
     <copy todir="war/WEB-INF/lib">
-      <fileset file="${gwt.home}/gwt-servlet.jar" />
+      <fileset file="${gwt.sdk}/gwt-servlet.jar" />
     </copy>
   </target>
 
@@ -51,8 +51,8 @@
     <pathelement path="war/WEB-INF/classes" />
     <!-- The server side code instantiates client side objects, so the enhancer
          will need gwt user to resolve all the imports it sees. -->
-    <fileset file="${gwt.home}/gwt-user.jar" />
-    <fileset dir="${appengine.home}/lib"
+    <fileset file="${gwt.sdk}/gwt-user.jar" />
+    <fileset dir="${appengine.sdk}/lib"
         includes="shared/**/*.jar, tools/**/*.jar, user/*.jar" />
   </path>
 
@@ -89,7 +89,7 @@
 
   <target name="runserver" depends="compile">
     <java classname="com.google.appengine.tools.development.DevAppServerMain"
-        classpath="${appengine.home}/lib/appengine-tools-api.jar"
+        classpath="${appengine.sdk}/lib/appengine-tools-api.jar"
         fork="true" >
       <arg value="war" />
     </java>

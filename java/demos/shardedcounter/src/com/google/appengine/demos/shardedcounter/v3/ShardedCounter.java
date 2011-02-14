@@ -40,7 +40,6 @@ import javax.jdo.Query;
  * not in the cache, the shards are read from the datastore and accumulated
  * to reconstruct the current count.
  *
- * @author j.s@google.com (Jeff Scudder)
  */
 public class ShardedCounter {
   private String counterName;
@@ -64,10 +63,10 @@ public class ShardedCounter {
 
   private DatastoreCounter getThisCounter(PersistenceManager pm) {
     DatastoreCounter current = null;
-    Query thisCounterQuery = pm.newQuery(DatastoreCounter.class, 
+    Query thisCounterQuery = pm.newQuery(DatastoreCounter.class,
         "counterName == nameParam");
     thisCounterQuery.declareParameters("String nameParam");
-    List<DatastoreCounter> counter = 
+    List<DatastoreCounter> counter =
         (List<DatastoreCounter>) thisCounterQuery.execute(counterName);
     if (counter != null && !counter.isEmpty()) {
       current = counter.get(0);
@@ -93,17 +92,17 @@ public class ShardedCounter {
       Integer cachedCount = (Integer) cache.get("count" + counterName);
       if (cachedCount != null) {
         return cachedCount.intValue();
-      } 
+      }
     }
 
     int sum = 0;
     PersistenceManager pm = PMF.get().getPersistenceManager();
 
     try {
-      Query shardsQuery = pm.newQuery(DatastoreCounterShard.class, 
+      Query shardsQuery = pm.newQuery(DatastoreCounterShard.class,
                                       "counterName == nameParam");
       shardsQuery.declareParameters("String nameParam");
-      List<DatastoreCounterShard> shards = 
+      List<DatastoreCounterShard> shards =
           (List<DatastoreCounterShard>) shardsQuery.execute(counterName);
       if (shards != null && !shards.isEmpty()) {
         for (DatastoreCounterShard current : shards) {
@@ -198,9 +197,9 @@ public class ShardedCounter {
     if (cache != null) {
       Integer cachedCount = (Integer) cache.get("count" + counterName);
       if (cachedCount != null) {
-        cache.put("count" + counterName, 
+        cache.put("count" + counterName,
             new Integer(count + cachedCount.intValue()));
-      } 
+      }
     }
 
     // Find how many shards are in this counter.
@@ -216,21 +215,21 @@ public class ShardedCounter {
     // Choose the shard randomly from the available shards.
     Random generator = new Random();
     int shardNum = generator.nextInt(shardCount);
-    
+
     pm = PMF.get().getPersistenceManager();
     try {
       Query randomShardQuery = pm.newQuery(DatastoreCounterShard.class);
       randomShardQuery.setFilter(
           "counterName == nameParam && shardNumber == numParam");
       randomShardQuery.declareParameters("String nameParam, int numParam");
-      List<DatastoreCounterShard> shards = 
+      List<DatastoreCounterShard> shards =
           (List<DatastoreCounterShard>) randomShardQuery.execute(
               counterName, shardNum);
       if (shards != null && !shards.isEmpty()) {
         DatastoreCounterShard shard = shards.get(0);
         shard.increment(count);
         pm.makePersistent(shard);
-      } 
+      }
     } finally {
       pm.close();
     }

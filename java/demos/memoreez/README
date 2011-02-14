@@ -1,9 +1,0 @@
-Google App Engine Java Runtime SDK - memoreez Demo
-
-memoreez is a simple memory game -- users are shown several rows of cells and
-must repeatedly select pairs of cells until they find two with the same
-color. The color-to-box mapping is stored in the datastore and cached using
-memcache.
-
-An administrator interface for generating a new color-to-box mapping is also
-provided.

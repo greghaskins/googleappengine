@@ -40,8 +40,7 @@ import com.google.gwt.user.client.ui.WidgetCollection;
 /**
  * A widget to display the collection of notes that are on a particular
  * {@link Surface}.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class SurfaceView extends FlowPanel implements Model.DataObserver {
 

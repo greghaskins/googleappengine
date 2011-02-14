@@ -8,8 +8,8 @@
   <!-- ............................................................ -->
 
   <!-- Computed variables -->
-  <property name="appengine.lib" location="${appengine.home}/lib" />
-  <property name="orm.lib" location="${appengine.home}/lib/tools/orm" />
+  <property name="appengine.lib" location="${appengine.sdk}/lib" />
+  <property name="orm.lib" location="${appengine.sdk}/lib/tools/orm" />
   <fail message="Cannot find AppEngine SDK; please reconfigure this build file">
     <condition><not><and>
       <available file="${appengine.lib}" type="dir"/>
@@ -25,7 +25,7 @@
   <property name="out.lib" location="${out.webinf}/lib" />
   <property name="out.bin" location="${out.webinf}/classes" />
 
-  <import file="${appengine.home}/config/user/ant-macros.xml" />
+  <import file="${appengine.sdk}/config/user/ant-macros.xml" />
 
   <!-- Public build targets -->
   <target name="compile" depends="_gwtc, _serverCode, _libs" description="Builds server code and runs a GWT compile." />
@@ -45,8 +45,8 @@
     <fileset dir="${orm.lib}">
       <include name="**/*.jar"/>
     </fileset>
-    <pathelement location="${gwt.home}/gwt-servlet.jar"/>
-    <pathelement location="${gwt.home}/gwt-user.jar" />
+    <pathelement location="${gwt.sdk}/gwt-servlet.jar"/>
+    <pathelement location="${gwt.sdk}/gwt-user.jar" />
     <pathelement location="${out.bin}"/>
   </path>
 
@@ -100,7 +100,7 @@
         <fileset dir="${appengine.lib}/user">
           <include name="*.jar" />
         </fileset>
-        <pathelement location="${gwt.home}/gwt-user.jar" />
+        <pathelement location="${gwt.sdk}/gwt-user.jar" />
       </classpath>
     </javac>
     <copy todir="${out.bin}">
@@ -119,7 +119,7 @@
         <include name="*.jar" /> 
       </fileset>
     </copy>
-    <copy todir="${out.lib}" file="${gwt.home}/gwt-servlet.jar" />
+    <copy todir="${out.lib}" file="${gwt.sdk}/gwt-servlet.jar" />
   </target>
 
   <target name="_jdoLibs" if="jdo.enable">
@@ -138,8 +138,8 @@
     </fileset>
     <pathelement path="src" />
     <pathelement location="${out.bin}" />
-    <fileset file="${gwt.home}/gwt-user.jar" />
-    <fileset file="${gwt.home}/gwt-dev.jar" />
+    <fileset file="${gwt.sdk}/gwt-user.jar" />
+    <fileset file="${gwt.sdk}/gwt-dev.jar" />
   </path>
 
   <target name="_gwtc">

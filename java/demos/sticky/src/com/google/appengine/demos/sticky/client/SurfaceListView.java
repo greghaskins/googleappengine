@@ -37,8 +37,7 @@ import com.google.gwt.user.client.ui.TextBox;
 /**
  * A widget for displaying the list of available surfaces to a user and for
  * adding new surfaces.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class SurfaceListView extends FlowPanel implements Model.DataObserver {
   /**
@@ -78,7 +77,7 @@ public class SurfaceListView extends FlowPanel implements Model.DataObserver {
     private final TextBox titleTextBox;
 
     /**
-     * 
+     *
      */
     public EditView() {
       final Document document = Document.get();

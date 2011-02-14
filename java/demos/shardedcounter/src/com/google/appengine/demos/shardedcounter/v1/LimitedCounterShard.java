@@ -23,8 +23,7 @@ import javax.jdo.annotations.PrimaryKey;
 
 /**
  * A JDO object representing a single shard belonging to the counter.
- * 
- * @author j.s@google.com (Jeff Scudder)
+ *
  */
 @PersistenceCapable(identityType = IdentityType.APPLICATION)
 public class LimitedCounterShard {
@@ -33,7 +32,7 @@ public class LimitedCounterShard {
   private Long id;
 
   @Persistent
-  private Integer count;  
+  private Integer count;
 
   public LimitedCounterShard() {
     this.count = new Integer(0);

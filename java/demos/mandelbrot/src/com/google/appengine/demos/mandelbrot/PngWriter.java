@@ -34,7 +34,6 @@ import java.util.zip.DeflaterOutputStream;
  * (http://incubator.apache.org/sanselan/site/index.html) might be
  * preferable in a production application.
  *
- * @author schwardo@google.com (Don Schwarz)
  */
 public class PngWriter implements ImageWriter {
   private static final byte[] HEADER = new byte[] {

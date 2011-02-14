@@ -17,7 +17,6 @@ package com.google.appengine.demos.mandelbrot;
 /**
  * Creates integer values corresponding to the specified color.
  *
- * @author schwardo@google.com (Don Schwarz)
  */
 public class ColorUtil {
   /**

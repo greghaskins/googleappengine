@@ -1,15 +1,15 @@
 <project name="shardedcounter" default="datanucleusenhance">
   <property name="project.dir" location="." />
-  <property name="sdk.dir" location="../.." />
+  <property name="appengine.sdk" location="../.." />
 
-  <import file="${sdk.dir}/config/user/ant-macros.xml" />
+  <import file="${appengine.sdk}/config/user/ant-macros.xml" />
 
   <path id="project.classpath">
     <pathelement path="${project.dir}/war/WEB-INF/classes" />
     <fileset dir="${project.dir}/war/WEB-INF/lib">
       <include name="**/*.jar" />
     </fileset>
-    <fileset dir="${sdk.dir}/lib">
+    <fileset dir="${appengine.sdk}/lib">
       <include name="shared/**/*.jar" />
     </fileset>
   </path>
@@ -17,10 +17,10 @@
   <target name="copyjars">
     <copy
         todir="${project.dir}/war/WEB-INF/lib">
-      <fileset dir="${sdk.dir}/lib/user">
+      <fileset dir="${appengine.sdk}/lib/user">
         <include name="*.jar" />
       </fileset>
-      <fileset dir="${sdk.dir}/lib/user/orm">
+      <fileset dir="${appengine.sdk}/lib/user/orm">
         <include name="*.jar" />
       </fileset>
     </copy>
@@ -36,7 +36,7 @@
 
   <path id="datanucleus.classpath">
     <pathelement path="${project.dir}/war/WEB-INF/classes" />
-    <fileset dir="${sdk.dir}/lib">
+    <fileset dir="${appengine.sdk}/lib">
       <include name="shared/**/*.jar" />
       <include name="tools/**/*.jar" />
     </fileset>

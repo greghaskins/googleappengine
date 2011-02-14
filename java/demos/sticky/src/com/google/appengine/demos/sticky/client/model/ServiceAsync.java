@@ -21,9 +21,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * The asynchronous interface for calls to {@link Service}.
- * 
- * @author knorton@google.com (Kelly Norton)
- * 
+ *
+ *
  */
 public interface ServiceAsync {
 
@@ -58,7 +57,7 @@ public interface ServiceAsync {
       AsyncCallback<Date> callback);
 
   /**
-   * @see Service#createNote(String, int, int, int, int)
+   * @see Service#createNote(user, int, int, int, int)
    * @param surfaceKey
    * @param x
    * @param y

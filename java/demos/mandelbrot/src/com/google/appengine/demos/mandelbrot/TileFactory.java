@@ -19,8 +19,6 @@ package com.google.appengine.demos.mandelbrot;
  * and complexity and vends {@link PixelSource} objects that
  * correspond to tiles of the overall image.
  *
- * @author schwardo@google.com (Don Schwarz)
- * @author nickjohnson@google.com (Nick Johnson)
  */
 public class TileFactory {
   /**

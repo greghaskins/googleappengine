@@ -24,11 +24,10 @@ import javax.jdo.PersistenceManager;
  * This initial implementation simply counts all instances of the
  * LimitedCounterShard class in the datastore. The only way to increment the
  * counter is to add another shard (creating another entity in the datastore).
- * This is not the correct approach, since we're limited to the number of 
+ * This is not the correct approach, since we're limited to the number of
  * objects we can fetch with the query, but this is a simple foundation showing
  * how to add a new shard.
- * 
- * @author j.s@google.com (Jeff Scudder)
+ *
  */
 public class Counter {
 

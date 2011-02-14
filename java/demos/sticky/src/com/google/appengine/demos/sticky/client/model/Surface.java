@@ -24,8 +24,7 @@ import com.google.gwt.core.client.GWT;
 
 /**
  * A client-side object representing a surface object.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 @SuppressWarnings("serial")
 public class Surface implements Serializable {
@@ -87,7 +86,7 @@ public class Surface implements Serializable {
 
   /**
    * Used to create a new surface in client-side code.
-   * 
+   *
    * @param model
    *          the model to which this surface is bound
    * @param title
@@ -103,7 +102,7 @@ public class Surface implements Serializable {
   /**
    * Constructs a new surface. This constructor can only be invoked on the
    * server.
-   * 
+   *
    * @param key
    *          the primary key
    * @param title
@@ -134,7 +133,7 @@ public class Surface implements Serializable {
 
   /**
    * Subscribe an observer to receive update notifications.
-   * 
+   *
    * @param observer
    */
   public void addObserver(Observer observer) {
@@ -143,7 +142,7 @@ public class Surface implements Serializable {
 
   /**
    * Returns the nick names of all authors on a surface.
-   * 
+   *
    * @return
    */
   public String[] getAuthorNames() {
@@ -153,7 +152,7 @@ public class Surface implements Serializable {
   /**
    * Returns a comma-separated and human readable list of authors for this
    * surface.
-   * 
+   *
    * @return
    */
   public String getAuthorNamesAsString() {
@@ -162,7 +161,7 @@ public class Surface implements Serializable {
 
   /**
    * Returns the primary key for this surface.
-   * 
+   *
    * @return
    */
   public String getKey() {
@@ -172,7 +171,7 @@ public class Surface implements Serializable {
   /**
    * Returns the date corresponding to the time this object was last saved on
    * the server.
-   * 
+   *
    * @return
    */
   public Date getLastUpdatedAt() {
@@ -181,7 +180,7 @@ public class Surface implements Serializable {
 
   /**
    * Returns the number of notes on this surface.
-   * 
+   *
    * @return
    */
   public int getNoteCount() {
@@ -190,7 +189,7 @@ public class Surface implements Serializable {
 
   /**
    * Returns the title for the surface.
-   * 
+   *
    * @return
    */
   public String getTitle() {
@@ -200,7 +199,7 @@ public class Surface implements Serializable {
   /**
    * Indicates whether the surface has received a key from the server (objects
    * receive keys after they are initially saved to the server).
-   * 
+   *
    * @return
    */
   public boolean hasKey() {
@@ -209,7 +208,7 @@ public class Surface implements Serializable {
 
   /**
    * Remove an existing observer.
-   * 
+   *
    * @param observer
    */
   public void removeObserver(Observer observer) {
@@ -221,7 +220,7 @@ public class Surface implements Serializable {
    * authors for this surface. This attempts to shorten author names to
    * something more friendly. For instance, knorton@google.com would be
    * shortened to knorton and Kelly Norton would become Kelly.
-   * 
+   *
    * @param model
    *          a model that is needed to determine the current user
    * @return
@@ -267,7 +266,7 @@ public class Surface implements Serializable {
   /**
    * Initializes some transient data in the object. This should be called by the
    * {@link Model} when a surface is first introduced in the client application.
-   * 
+   *
    * @param model
    *          the model to which this object is bound
    */

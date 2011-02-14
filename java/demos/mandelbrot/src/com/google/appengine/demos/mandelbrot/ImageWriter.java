@@ -21,7 +21,6 @@ import java.io.IOException;
  * PixelSource} to a specific stream of bytes in some specific image
  * format.
  *
- * @author schwardo@google.com (Don Schwarz)
  */
 public interface ImageWriter {
   /**

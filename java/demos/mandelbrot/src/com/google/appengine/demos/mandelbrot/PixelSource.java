@@ -17,7 +17,6 @@ package com.google.appengine.demos.mandelbrot;
 /**
  * {@code PixelSource} represents a physical image of a specific resolution.
  *
- * @author schwardo@google.com (Don Schwarz)
  */
 public interface PixelSource {
   /**

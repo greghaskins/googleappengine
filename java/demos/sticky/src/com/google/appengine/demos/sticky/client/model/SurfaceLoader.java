@@ -27,8 +27,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * the current author. This class takes care of performing (and possibly
  * retrying) a query for the initial set of Notes and then continues polling the
  * server for updates.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 class SurfaceLoader extends Timer implements AsyncCallback<GetSurfacesResult> {
 
@@ -102,7 +101,7 @@ class SurfaceLoader extends Timer implements AsyncCallback<GetSurfacesResult> {
 
   /**
    * Constructs a new loader for the given model.
-   * 
+   *
    * @param model
    *          the model this loader will control
    * @param interval
@@ -155,7 +154,7 @@ class SurfaceLoader extends Timer implements AsyncCallback<GetSurfacesResult> {
 
   /**
    * Invoked by {@link Model} when it creates a {@link Surface}.
-   * 
+   *
    * @param key
    *          the key for the newly saved surface
    * @param surface

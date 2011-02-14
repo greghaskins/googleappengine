@@ -45,8 +45,7 @@ import com.google.gwt.user.client.ui.ToggleButton;
  * A widget that displays the Ui associated with the header of the application.
  * This includes buttons for adding notes, bring up the surface list and
  * information about the current surface and user.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class HeaderView extends FlowPanel implements Model.DataObserver,
     Surface.Observer {
@@ -100,7 +99,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
       /**
        * Constructor.
-       * 
+       *
        * @param name
        *          the name to display while the model saves the change on the
        *          server
@@ -163,7 +162,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Constructor.
-     * 
+     *
      * @param model
      *          the model to use for persisting changes
      * @param images
@@ -185,7 +184,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Displays the text box and transitons the controller to edit mode.
-     * 
+     *
      */
     public void edit() {
       textBox.setText("Enter user's email address");
@@ -196,7 +195,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Displays the text box and transitions the controller to edit mode.
-     * 
+     *
      * @param contents
      *          the initial contents for the text box
      */
@@ -209,7 +208,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Gets the add button.
-     * 
+     *
      * @return
      */
     public PushButton getAddButton() {
@@ -218,7 +217,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Gets the text box for entry of author email address.
-     * 
+     *
      * @return
      */
     public TextBox getTextBox() {
@@ -368,7 +367,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Gets the button that is used to show and hide the surface list view.
-     * 
+     *
      * @return
      */
     public ToggleButton getButton() {
@@ -377,7 +376,7 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
 
     /**
      * Gets the surface list view.
-     * 
+     *
      * @return
      */
     public SurfaceListView getSurfaceListView() {

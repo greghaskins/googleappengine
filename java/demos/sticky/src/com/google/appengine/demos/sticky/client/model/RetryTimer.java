@@ -22,8 +22,7 @@ import com.google.gwt.user.client.Timer;
  * {@link RetryTimer#retry()} to provide the task that needs to be performed on
  * a retry, then invocations of {@link RetryTimer#retryLater()} will schedule
  * retries on a progressively longer schedule.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public abstract class RetryTimer {
   private static final int MAX_RETRY_DELAY = 60000 /* ms. */;
@@ -56,7 +55,7 @@ public abstract class RetryTimer {
    * {@link RetryTimer#RETRY_DELAY_GROWTH_RATE} milliseconds on each failure
    * until it reaches {@link RetryTimer#MAX_RETRY_DELAY} where it will remain
    * constant for any subsequent failures.
-   * 
+   *
    * @param count
    *          the number of failures that have occurred
    * @return the delay to use, in milliseconds

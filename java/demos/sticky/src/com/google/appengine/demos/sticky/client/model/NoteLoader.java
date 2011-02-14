@@ -29,8 +29,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * selected {@link Surface}. This class takes care of performing (and possibly
  * retrying) a query for the initial set of Notes and then continues polling the
  * server for updates.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 class NoteLoader {
 
@@ -161,7 +160,7 @@ class NoteLoader {
 
   /**
    * Creates a new loader that is bound to the given model.
-   * 
+   *
    * @param model the model to which this loader is bound
    * @param interval the time to wait between polls to the server
    */
@@ -173,7 +172,7 @@ class NoteLoader {
   /**
    * Add a note to the loading cache so the {@link Model} can properly manage
    * duplicate objects.
-   * 
+   *
    * @param key
    *          the notes key
    * @param note

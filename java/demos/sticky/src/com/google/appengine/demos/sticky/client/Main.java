@@ -29,8 +29,7 @@ import com.google.gwt.user.client.ui.UIObject;
 
 /**
  * The entry point for the Sticky application.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class Main extends RetryTimer implements EntryPoint, Model.LoadObserver,
     Model.StatusObserver {
@@ -90,7 +89,7 @@ public class Main extends RetryTimer implements EntryPoint, Model.LoadObserver,
 
     /**
      * Displays the the Ui for a task status.
-     * 
+     *
      * @param text
      *          the text to be displayed
      */

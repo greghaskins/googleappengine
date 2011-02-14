@@ -22,8 +22,7 @@ import com.google.gwt.core.client.GWT;
 
 /**
  * A client side data object representing a Sticky note.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 @SuppressWarnings("serial")
 public class Note implements Serializable {
@@ -77,7 +76,7 @@ public class Note implements Serializable {
 
   /**
    * A constructor to be used on client-side only.
-   * 
+   *
    * @param model
    * @param x
    * @param y
@@ -95,7 +94,7 @@ public class Note implements Serializable {
 
   /**
    * A constructor to be used on server-side only.
-   * 
+   *
    * @param key
    * @param x
    * @param y
@@ -150,7 +149,7 @@ public class Note implements Serializable {
 
   /**
    * Gets the observer that is receiving notification when the note is modified.
-   * 
+   *
    * @return
    */
   public Observer getObserver() {
@@ -175,7 +174,7 @@ public class Note implements Serializable {
 
   /**
    * Indicates whether this note is owned by the current user.
-   * 
+   *
    * @return <code>true</code> if the note is owned by the current user,
    *         <code>false</code> otherwise
    */
@@ -194,7 +193,7 @@ public class Note implements Serializable {
   /**
    * Sets the observer that will receive notification when this note is
    * modified.
-   * 
+   *
    * @param observer
    */
   public void setObserver(Observer observer) {
@@ -216,7 +215,7 @@ public class Note implements Serializable {
   /**
    * Initializes transient data structures in the object. This will be called
    * directly by the controlling model when the note is first received.
-   * 
+   *
    * @param model
    *          the model that owns this {@link Note}
    */
@@ -227,7 +226,7 @@ public class Note implements Serializable {
 
   /**
    * Invoked when the note has been saved to the server.
-   * 
+   *
    * @param lastUpdatedAt
    *          the time that the server reported for the save
    * @return <code>this</code>, for chaining purposes
@@ -241,7 +240,7 @@ public class Note implements Serializable {
   /**
    * Invoked when the model receives notification from the server that this note
    * has been modified.
-   * 
+   *
    * @param note
    *          a note containing up-to-date information about <code>this</code>
    * @return <code>this</code>, for chaining purposes

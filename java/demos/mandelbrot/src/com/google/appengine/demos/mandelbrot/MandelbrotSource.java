@@ -18,8 +18,6 @@ package com.google.appengine.demos.mandelbrot;
  * {@code MandelbrotSource} is a {@link FractalSource} that draws the
  * Mandelbrot Series.
  *
- * @author nickjohnson@google.com (Nick Johnson)
- * @author schwardo@google.com (Don Schwarz)
  */
 public class MandelbrotSource implements FractalSource {
   private static final int ESCAPE = 10000;

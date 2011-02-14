@@ -15,9 +15,8 @@
 
 package com.google.appengine.demos.taskqueueexamples;
 
-
-import com.google.appengine.api.labs.taskqueue.QueueFactory;
-import com.google.appengine.api.labs.taskqueue.TaskOptions;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 
 import java.io.IOException;
 
@@ -33,8 +32,7 @@ public class SimpleCounterServlet extends HttpServlet {
       throws IOException {
 
     QueueFactory.getDefaultQueue().add(
-        TaskOptions.Builder
-          .url("/workers/simplecounter")
+        TaskOptions.Builder.withUrl("/workers/simplecounter")
           .param("name", "thecounter")
           .param("delta", "1"));
 

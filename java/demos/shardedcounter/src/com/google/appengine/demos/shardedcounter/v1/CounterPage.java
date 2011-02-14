@@ -22,18 +22,17 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Servlet provides the HTML for the counter web page.
- * 
- * @author j.s@google.com (Jeff Scudder)
+ *
  */
 public class CounterPage extends HttpServlet {
-  public void doGet(HttpServletRequest req, HttpServletResponse resp) 
+  public void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws IOException {
     resp.getWriter().println("<html>");
     resp.getWriter().println("  <body>");
 
     Counter counter = new Counter();
 
-    resp.getWriter().println("  <p>Current count: " + counter.getCount() 
+    resp.getWriter().println("  <p>Current count: " + counter.getCount()
         + "</p>");
 
     resp.getWriter().println("<form action=\"/v1\" method=\"post\">");
@@ -42,7 +41,7 @@ public class CounterPage extends HttpServlet {
     resp.getWriter().println("</form></body></html>");
   }
 
-  public void doPost(HttpServletRequest req, HttpServletResponse resp) 
+  public void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws IOException {
     Counter counter = new Counter();
     // Add a shard for now, since we can't yet increment.

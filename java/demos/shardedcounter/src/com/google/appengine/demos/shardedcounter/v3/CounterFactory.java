@@ -22,7 +22,6 @@ import javax.jdo.PersistenceManager;
 /**
  * Finds or creates a sharded counter with the desired name.
  *
- * @author j.s@google.com (Jeff Scudder)
  */
 public class CounterFactory {
 
@@ -34,10 +33,10 @@ public class CounterFactory {
       return null;
     }
   }
-    
+
   public ShardedCounter createCounter(String name) {
     ShardedCounter counter = new ShardedCounter(name);
-    
+
     DatastoreCounter counterEntity = new DatastoreCounter(name, 0);
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {

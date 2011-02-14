@@ -26,8 +26,7 @@ import com.google.appengine.demos.sticky.client.model.Surface;
 
 /**
  * A more typesafe wrapper around a {@link MemcacheService}.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class Cache {
   private static String createNotesId(String surfaceKey) {
@@ -59,7 +58,7 @@ public class Cache {
 
   /**
    * Creates a new cache.
-   * 
+   *
    * @param memcache
    *          the memcache service to use for caching objects
    */
@@ -70,7 +69,7 @@ public class Cache {
   /**
    * Deletes the collection of notes that are cached for a surface. This is used
    * to invalidate cache entries.
-   * 
+   *
    * @param surfaceKey
    *          the key for the surface
    */
@@ -81,7 +80,7 @@ public class Cache {
   /**
    * Deletes a {@link Surface} from the cache. This is used to invalidate cache
    * entries.
-   * 
+   *
    * @param surfaceKey
    */
   public void deleteSurface(Key surfaceKey) {
@@ -90,7 +89,7 @@ public class Cache {
 
   /**
    * Deletes a collection of surface keys for a user.
-   * 
+   *
    * @param email
    *          the user's email
    */
@@ -102,7 +101,7 @@ public class Cache {
    * Attempts to fetch the collection of notes contained in a surface for a
    * particular user. If there is a value, but the user is not known to have
    * access to this surface, <code>null</code> will be returned.
-   * 
+   *
    * @param user
    *          the user requesting access to the cache entry
    * @param surfaceKey
@@ -119,7 +118,7 @@ public class Cache {
 
   /**
    * Attempts to fetch a surface from cache.
-   * 
+   *
    * @param surfaceKey
    *          the key of the surface
    * @return the surface if there is a cache entry, <code>null</code> otherwise
@@ -130,7 +129,7 @@ public class Cache {
 
   /**
    * Attempts to fetch a collection of surface keys for a particular user.
-   * 
+   *
    * @param email
    *          the email for the user
    * @return a collection of keys if there is a cache entry, <code>null</code>
@@ -144,7 +143,7 @@ public class Cache {
   /**
    * Adds the collection of notes in a surface to the cache and grants the user
    * access to that entry.
-   * 
+   *
    * @param user
    *          the user that should be given access to the cache entry
    * @param surfaceKey
@@ -161,7 +160,7 @@ public class Cache {
 
   /**
    * Adds a surface object to the cache.
-   * 
+   *
    * @param surfaceKey
    *          the key of the surface
    * @param surface
@@ -175,7 +174,7 @@ public class Cache {
 
   /**
    * Adds the collection of surface keys to the cache for a user (by email).
-   * 
+   *
    * @param email
    *          the user's email
    * @param surfaceKeys

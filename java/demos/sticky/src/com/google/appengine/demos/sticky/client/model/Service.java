@@ -25,8 +25,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 /**
  * The RPC api available to the client. The asynchronous version that is used
  * directly by the client is {@link ServiceAsync}.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 @RemoteServiceRelativePath("service")
 public interface Service extends RemoteService {
@@ -53,7 +52,7 @@ public interface Service extends RemoteService {
     /**
      * Constructs a new result. This constructor can only be invoked on the
      * server.
-     * 
+     *
      * @param authorName
      *          the name of the author that was added to the surface
      * @param updatedAt
@@ -74,7 +73,7 @@ public interface Service extends RemoteService {
 
     /**
      * The name of the {@link Author} that was added to the surface.
-     * 
+     *
      * @return
      */
     public String getAuthorName() {
@@ -83,7 +82,7 @@ public interface Service extends RemoteService {
 
     /**
      * The new last updated time for the surface that was modified.
-     * 
+     *
      * @return
      */
     public Date getUpdatedAt() {
@@ -93,7 +92,7 @@ public interface Service extends RemoteService {
 
   /**
    * Encapsulates a response from
-   * {@link Service#createNote(String, int, int, int, int)}.
+   * {@link Service#createNote(user, int, int, int, int)}.
    */
   @SuppressWarnings("serial")
   static class CreateObjectResult implements Serializable {
@@ -104,7 +103,7 @@ public interface Service extends RemoteService {
     /**
      * Constructs a new result. This constructor can only be invoked on the
      * server.
-     * 
+     *
      * @param key
      *          the key that was assigned to the new {@link Note}
      * @param updateTime
@@ -125,7 +124,7 @@ public interface Service extends RemoteService {
 
     /**
      * Returns the key that was assigned to the new {@link Note}.
-     * 
+     *
      * @return
      */
     public String getKey() {
@@ -135,7 +134,7 @@ public interface Service extends RemoteService {
     /**
      * Returns the {@link Date} that was assigned to
      * {@link Note#getLastUpdatedAt()} by the server.
-     * 
+     *
      * @return
      */
     public Date getUpdateTime() {
@@ -155,7 +154,7 @@ public interface Service extends RemoteService {
     /**
      * Constructs a new result. This constructor can only be invoked on the
      * server.
-     * 
+     *
      * @param timestamp
      *          an opaque timestamp
      * @param notes
@@ -177,7 +176,7 @@ public interface Service extends RemoteService {
     /**
      * Returns the notes that were returned by the server. This can be
      * zero-length, but will not be null.
-     * 
+     *
      * @return
      */
     public Note[] getNotes() {
@@ -187,7 +186,7 @@ public interface Service extends RemoteService {
     /**
      * Returns an opaque timestamp that should be included in future calls to
      * {@link Service#getNotes(String, String)}.
-     * 
+     *
      * @return
      */
     public String getTimestamp() {
@@ -207,7 +206,7 @@ public interface Service extends RemoteService {
     /**
      * Constructs a new result. This constructor can only be invoked on the
      * server.
-     * 
+     *
      * @param timestamp
      *          an opaque timestamp
      * @param surfaces
@@ -228,7 +227,7 @@ public interface Service extends RemoteService {
 
     /**
      * Returns a list of surfaces for the current author.
-     * 
+     *
      * @return
      */
     public Surface[] getSurfaces() {
@@ -237,7 +236,7 @@ public interface Service extends RemoteService {
 
     /**
      * Returns an opaque timestamp.
-     * 
+     *
      * @return
      */
     public String getTimestamp() {
@@ -259,7 +258,7 @@ public interface Service extends RemoteService {
     /**
      * Constructs a new response. This constructor can only be invoked on the
      * server.
-     * 
+     *
      * @param author
      *          the current author
      * @param surface
@@ -283,7 +282,7 @@ public interface Service extends RemoteService {
 
     /**
      * Returns the current author.
-     * 
+     *
      * @return
      */
     public Author getAuthor() {
@@ -292,7 +291,7 @@ public interface Service extends RemoteService {
 
     /**
      * Returns a url that can be used to log the author out.
-     * 
+     *
      * @return
      */
     public String getLogoutUrl() {
@@ -302,7 +301,7 @@ public interface Service extends RemoteService {
     /**
      * Returns the default surface for the author. This is the surface that will
      * be selected when the application first loads.
-     * 
+     *
      * @return
      */
     public Surface getSurface() {
@@ -312,7 +311,7 @@ public interface Service extends RemoteService {
 
   /**
    * Add an author to the author list of a surface.
-   * 
+   *
    * @param surfaceKey
    *          the key of the surface being modified
    * @param email
@@ -325,7 +324,7 @@ public interface Service extends RemoteService {
 
   /**
    * Updates the content of a {@link Note}.
-   * 
+   *
    * @param noteKey
    *          they key of the note to modify
    * @param content
@@ -338,7 +337,7 @@ public interface Service extends RemoteService {
 
   /**
    * Updates the position for a {@link Note}.
-   * 
+   *
    * @param noteKey
    *          the key of the note to modify
    * @param x
@@ -357,7 +356,7 @@ public interface Service extends RemoteService {
 
   /**
    * Creates a new {@link Note}.
-   * 
+   *
    * @param surfaceKey
    *          the key of the surface where this note will be created
    * @param x
@@ -376,7 +375,7 @@ public interface Service extends RemoteService {
 
   /**
    * Create a new {@link Surface}.
-   * 
+   *
    * @param title
    *          the title of the surface
    * @return a result object
@@ -390,7 +389,7 @@ public interface Service extends RemoteService {
    * are returned. Callers should pass a timestamp from
    * {@link GetNotesResult#getTimestamp()}. For the initial call, or to simply
    * receive the full set of notes, pass <code>null</code>.
-   * 
+   *
    * @param surfaceKey
    *          the surface to query
    * @param timestamp
@@ -408,7 +407,7 @@ public interface Service extends RemoteService {
    * timestamp from {@link GetSurfacesResult#getTimestamp()}. For the initial
    * call, or to simply receive the full set of surfaces, pass <code>null</code>
    * .
-   * 
+   *
    * @param timestamp
    *          an opaque timestamp
    * @return a result object
@@ -418,7 +417,7 @@ public interface Service extends RemoteService {
 
   /**
    * Returns the information needed to load the application.
-   * 
+   *
    * @return a result object
    * @throws AccessDeniedException
    */

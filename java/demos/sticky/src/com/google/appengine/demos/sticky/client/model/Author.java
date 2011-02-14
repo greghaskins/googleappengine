@@ -19,8 +19,7 @@ import java.io.Serializable;
 
 /**
  * A client-side data object representing an author.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 @SuppressWarnings("serial")
 public class Author implements Serializable {
@@ -28,7 +27,7 @@ public class Author implements Serializable {
   /**
    * Returns a shorter name for an author. For names of the form a@company.com,
    * this returns "a". For names of the form First Last, this returns "First".
-   * 
+   *
    * @return
    */
   public static String getShortName(String name) {
@@ -85,7 +84,7 @@ public class Author implements Serializable {
   /**
    * Convenience method that calls through to
    * {@link Author#getShortName(String)}.
-   * 
+   *
    * @return
    */
   public String getShortName() {

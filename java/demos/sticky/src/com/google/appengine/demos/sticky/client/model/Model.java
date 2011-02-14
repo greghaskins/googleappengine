@@ -28,8 +28,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * Encapsulates the entire application data controller for the application. The
  * model controls all RPC to the server and is responsible for keeping client
  * side copies of data synchronized with the server.
- * 
- * @author knorton@google.com (Kelly Norton)
+ *
  */
 public class Model {
 
@@ -40,7 +39,7 @@ public class Model {
 
     /**
      * Called when a new {@link Note} is created.
-     * 
+     *
      * @param note
      *          the note that was created
      */
@@ -48,7 +47,7 @@ public class Model {
 
     /**
      * Called when a new {@link Surface} is created.
-     * 
+     *
      * @param surface
      *          the surface that was created
      */
@@ -56,7 +55,7 @@ public class Model {
 
     /**
      * Called when an initial list of {@link Note}s is returned from the server.
-     * 
+     *
      * @param notes
      *          all the {@link Note}s on the currently selected {@link Surface}.
      */
@@ -64,7 +63,7 @@ public class Model {
 
     /**
      * Called when the selected {@link Surface} changes.
-     * 
+     *
      * @param nowSelected
      *          the surface that is now selected
      * @param wasSelected
@@ -75,7 +74,7 @@ public class Model {
     /**
      * Called when the initial list of {@link Surface}s is returned from the
      * server.
-     * 
+     *
      * @param surfaces
      *          all the surfaces where the current author is a member
      */
@@ -90,7 +89,7 @@ public class Model {
 
     /**
      * Invoked when the {@link Model} loads successfully.
-     * 
+     *
      * @param model
      *          the newly loaded model
      */
@@ -127,7 +126,7 @@ public class Model {
 
     /**
      * Invoked when a task that requires user feedback starts.
-     * 
+     *
      * @param description
      *          a description of the task that is starting
      */
@@ -431,7 +430,7 @@ public class Model {
 
   /**
    * Provides an asynchronous factory for loading a {@link Model}.
-   * 
+   *
    * @param loadObserver
    *          a callback to receive load events
    * @param statusObserver
@@ -526,7 +525,7 @@ public class Model {
   /**
    * Add an {@link Author} as a member of a particular {@link Surface} and
    * persist that change to the server.
-   * 
+   *
    * @param surface
    *          the surface to which the author will be added
    * @param email
@@ -542,7 +541,7 @@ public class Model {
   /**
    * Subsscribes a {@link DataObserver} to receive data related events from this
    * {@link Model}.
-   * 
+   *
    * @param observer
    */
   public void addDataObserver(DataObserver observer) {
@@ -552,7 +551,7 @@ public class Model {
   /**
    * Creates a note with no content at a particular location on the
    * {@link Surface} and persists that change to the server.
-   * 
+   *
    * @param x
    * @param y
    * @param width
@@ -567,7 +566,7 @@ public class Model {
   /**
    * Creates a {@link Surface} with the specified title and persists that change
    * to the server.
-   * 
+   *
    * @param title
    */
   public void createSurface(String title) {
@@ -579,7 +578,7 @@ public class Model {
 
   /**
    * Gets the currently logged in author.
-   * 
+   *
    * @return
    */
   public Author getCurrentAuthor() {
@@ -588,7 +587,7 @@ public class Model {
 
   /**
    * Gets a url that can be used to log out the current user.
-   * 
+   *
    * @return
    */
   public String getLogoutUrl() {
@@ -597,7 +596,7 @@ public class Model {
 
   /**
    * Gets the currently selected surface.
-   * 
+   *
    * @return
    */
   public Surface getSelectedSurface() {
@@ -607,7 +606,7 @@ public class Model {
   /**
    * Selects the specified {@link Surface}. The newly selected surface should be
    * made visible in the Ui.
-   * 
+   *
    * @param surface
    *          the surface to display
    */
@@ -627,7 +626,7 @@ public class Model {
   /**
    * Updates the contents of a {@link Note} and persists the change to the
    * server.
-   * 
+   *
    * @param note
    * @param content
    */
@@ -638,7 +637,7 @@ public class Model {
   /**
    * Updates the position of a {@link Note} and persists the change to the
    * server.
-   * 
+   *
    * @param note
    * @param x
    * @param y
