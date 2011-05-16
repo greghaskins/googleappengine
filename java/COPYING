@@ -34,6 +34,11 @@ licenses and/or has source available from other locations.
   lib/shared/jsp/repackaged-appengine-ant-1.7.1.jar
   lib/shared/jsp/repackaged-appengine-ant-launcher-1.7.1.jar
 
+* Apache HttpComponents
+  License: Apache License v. 2.0 
+  Source code availability: http://hc.apache.org/
+  Bundled in lib/impl/appengine-api-stubs.jar under org/apache/http
+
 * Jakarta Commons Logging 
     License: Apache License v. 2.0 
     Source code availability: http://commons.apache.org/logging/

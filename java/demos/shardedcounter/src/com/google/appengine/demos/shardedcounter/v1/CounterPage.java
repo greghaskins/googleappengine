@@ -44,7 +44,6 @@ public class CounterPage extends HttpServlet {
   public void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws IOException {
     Counter counter = new Counter();
-    // Add a shard for now, since we can't yet increment.
     counter.addShard();
     doGet(req, resp);
   }

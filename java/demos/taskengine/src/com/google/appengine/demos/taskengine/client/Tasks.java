@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,10 +25,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
- * 
+ *
  * 'Task Engine' is a mobile sample App that demonstrates using GWT at a lower
  * level and closer to the underlying DOM.
- * 
+ *
  * If your Application is simple enough, you may be able to get by without
  * leveraging GWT's built in widgets and just use the core DOM API. For smaller
  * Apps, this may buy you some savings in code size. In the end however, there
@@ -48,7 +48,7 @@ public class Tasks implements EntryPoint {
 
     /**
      * Adds a new task to the task list UI and persist it to the server.
-     * 
+     *
      * @param task
      */
     public void addNewTask(Task task) {
@@ -69,8 +69,6 @@ public class Tasks implements EntryPoint {
           api.deleteTasks(tasksToDelete, new AsyncCallback<String>() {
 
             public void onFailure(Throwable caught) {
-              // This does not change the UI. So the user should still see the
-              // row as unpersisted.
               taskList.movePendingTasksBackToCompleted();
             }
 
@@ -102,7 +100,7 @@ public class Tasks implements EntryPoint {
 
     /**
      * Loads a task in the TaskDetails page.
-     * 
+     *
      * @param task the {@link Task} for the task to be loaded.
      */
     public void loadTask(Task task) {
@@ -113,15 +111,13 @@ public class Tasks implements EntryPoint {
      * Saves a {@link Task} for a given {@link TaskRow} to the server. This is
      * used to both update existing tasks, and to save new ones. It updates the
      * UI for the TaskRow after getting a response from the server.
-     * 
+     *
      * @param row the {@link TaskRow} for the task we want to save.
      */
     public void persistTask(final TaskRow row) {
       api.persistTask(row.getTaskData(), new AsyncCallback<String>() {
 
         public void onFailure(Throwable caught) {
-          // Let the user know that persistence failed.
-          // try again later or something
           DomUtils.getWindow().alert(
               "Failed to save task to server. Try so re-save it.");
         }
@@ -130,7 +126,6 @@ public class Tasks implements EntryPoint {
           if (result == null) {
             onFailure(null);
           } else {
-            // mark the Task row as persisted
             row.setRowAsPersisted(result);
           }
         }
@@ -141,7 +136,7 @@ public class Tasks implements EntryPoint {
     /**
      * Updates the task information on the server and transitions back to the
      * {@link TaskList}.
-     * 
+     *
      * @param task the {@link Task} for the updated task
      * @param oldPriority the old value for the priority of the task
      */
@@ -153,14 +148,14 @@ public class Tasks implements EntryPoint {
 
   /**
    * Our resources used in the sample.
-   * 
+   *
    * {@link ControlBar.Resources} is an {@link ImmutableResourceBundle} (IRB).
    * IRB allows us to have a programmatic interface with static resources used
    * in this sample, like CSS styles and Images. Images specified here (or in
    * the inheritance chain) are automatically combined into a single sprite,
    * with corresponding CSS automatically generated to display each individual
    * image piece through cropping.
-   * 
+   *
    */
   public interface Resources extends TaskList.Resources, TaskDetails.Resources {
   }
@@ -175,18 +170,14 @@ public class Tasks implements EntryPoint {
    * This is the entry point method.
    */
   public void onModuleLoad() {
-    // Inject styles into the page
     StyleInjector.injectAtEnd(resources.taskDetailsCss().getText()
         + resources.taskListCss().getText()
         + resources.controlBarCss().getText()
         + resources.labelMatrixCss().getText());
 
-    // Our main Widget and container of our UI pages
     uiPages = new PageTransitionPanel(Document.get().getBody());
-    // The object passed around that controls the main functionality of the app.
     Controller controller = new Controller();
 
-    // Make UI Pages
     ControlBar.Controls taskListControls = TaskList.createControls(controller,
         resources);
     taskList = new TaskList(uiPages, taskListControls, controller, resources);
@@ -196,17 +187,10 @@ public class Tasks implements EntryPoint {
     taskDetails = new TaskDetails(uiPages, taskDetailsControls, controller,
         resources);
 
-    // Do initial load of tasks wait
     loadEntireTaskList();
 
-    // Do our initial page sizing.
     uiPages.doResize();
 
-    // We queue up a deferred resize as a hack to work around the fact that
-    // certain mobile browsers fail to repaint after the above initial resize
-    // happens and leave you with a blank screen. If we only do a deferred
-    // resize, we see the screen flicker, so we do both the synchronous resize
-    // above, and this deferred one.
     DeferredCommand.defer(new DeferredCommand() {
       @Override
       public void onExecute() {
@@ -219,9 +203,6 @@ public class Tasks implements EntryPoint {
    * Fetches all tasks from the server.
    */
   private void loadEntireTaskList() {
-    // Set a timeout in case the call to the backend takes an unbounded amount
-    // of time (e.g. network failure). We simply ask them to try signing in
-    // again.
     DeferredCommand.defer(new DeferredCommand() {
       @Override
       public void onExecute() {
@@ -231,13 +212,10 @@ public class Tasks implements EntryPoint {
       }
     }, 5000);
 
-    // Fetch the list of tasks
     api.getTaskList(new AsyncCallback<Task[]>() {
 
       public void onFailure(Throwable caught) {
         if (caught == null) {
-          // RPC may have returned success, but the user isn't logged in!
-          // So we Fetch SignIn URL.
           api.getLoginUrl(new AsyncCallback<String>() {
 
             public void onFailure(Throwable caught) {
@@ -250,9 +228,6 @@ public class Tasks implements EntryPoint {
 
           });
         } else {
-          // We had a serialized exception. User need not be aware of this.
-          // For debugging purposes we may want to alert this.
-          // DomUtils.getWindow().alert(caught.getMessage());
           taskList.notifyNotLoggedIn(null);
         }
       }
@@ -261,8 +236,6 @@ public class Tasks implements EntryPoint {
         if (tasks == null) {
           onFailure(null);
         } else {
-          // The 0th index contains a meta task that is just a container for the
-          // user's email address and logout URL
           Task metaTask = tasks[0];
           String userEmail = metaTask.getEmail();
           String logoutUrl = metaTask.getDetails();

@@ -92,7 +92,6 @@ public class ShardedCounter {
 
   public int getNumShards() {
     int numShards = 0;
-    // Find the current number of shards for this Counter.
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {
       Counter current = getThisCounter(pm);
@@ -111,21 +110,18 @@ public class ShardedCounter {
 
   public int addShards(int count) {
     int numShards = 0;
-    // Find the initial shard count for this Counter.
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {
       Counter current = getThisCounter(pm);
       if (current != null) {
         numShards = current.getShardCount().intValue();
         current.setShardCount(numShards + count);
-        // Save the increased shard count for this Counter.
         pm.makePersistent(current);
       }
     } finally {
       pm.close();
     }
 
-    // Create new shard objects for this counter.
     pm = PMF.get().getPersistenceManager();
     try {
       for (int i = 0; i < count; i++) {
@@ -144,7 +140,6 @@ public class ShardedCounter {
   }
 
   public void increment(int count) {
-    // Find how many shards are in this counter.
     int shardCount = 0;
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {
@@ -154,7 +149,6 @@ public class ShardedCounter {
       pm.close();
     }
 
-    // Choose the shard randomly from the available shards.
     Random generator = new Random();
     int shardNum = generator.nextInt(shardCount);
 

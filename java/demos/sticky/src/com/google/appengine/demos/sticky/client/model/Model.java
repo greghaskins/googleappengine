@@ -322,28 +322,22 @@ public class Model {
     private void taskFailed(Task task, boolean fatal) {
       assert task == head.task;
 
-      // Report a failure to the Model.
       onServerFailed(fatal);
 
-      // Schedule a retry.
       retryLater();
     }
 
     private void taskSucceeded(Task task) {
       assert task == head.task;
-      // Report a success to the Model.
       onServerSucceeded();
 
-      // Reset the retry counter.
       resetRetryCount();
 
-      // Move on to the next task.
       executeNext();
     }
 
     @Override
     protected void retry() {
-      // Retry running the head task.
       executeHead();
     }
   }
@@ -420,13 +414,13 @@ public class Model {
    * The period to use, in millisconds, for polling for updates to notes on the
    * currently selected surface.
    */
-  private static final int GET_NOTES_POLLING_INTERVAL = 10000 /* ms. */;
+  private static final int GET_NOTES_POLLING_INTERVAL = 10000;
 
   /**
    * The period to use, in milliseconds, for polling for updates to the list of
    * surfaces that the author is participating in.
    */
-  private static final int GET_SURFACES_POLLING_INTERVAL = 20000 /* ms. */;
+  private static final int GET_SURFACES_POLLING_INTERVAL = 20000;
 
   /**
    * Provides an asynchronous factory for loading a {@link Model}.
@@ -451,9 +445,7 @@ public class Model {
     });
   }
 
-  native static void forceApplicationReload() /*-{
-    $wnd.location.reload();
-  }-*/;
+  native static void forceApplicationReload();
 
   /**
    * An rpc proxy for making calls to the server.

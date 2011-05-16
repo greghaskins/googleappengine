@@ -45,16 +45,10 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
   private static final int TIMESTAMP_PADDING = 1000 * 60;
 
   private static Date convertTimestampToDate(String timetamp) {
-    // To ensure we don't miss any events due to clock differences, we will
-    // expand the time window by 1 minute.
     return new Date(Long.parseLong(timetamp, 16) - TIMESTAMP_PADDING);
   }
 
   private static String createTimestamp() {
-    // The client should never need to do math on the timestamp and returning a
-    // long value into GWT just complicates the client side code since GWT will
-    // load code to emulate longs. To simplify things, we return a hex encoded
-    // string.
     return Long.toString(System.currentTimeMillis(), 16);
   }
 
@@ -62,10 +56,8 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
     if (timestamp == null) {
       return notes;
     } else {
-      // Get the actual date + padding represented by the timestamp.
       final Date since = convertTimestampToDate(timestamp);
       final List<Note> newNotes = new ArrayList<Note>(notes.length);
-      // Return only those notes that were updated after since.
       for (Note note : notes) {
         if (note.getLastUpdatedAt().after(since)) {
           newNotes.add(note);
@@ -76,8 +68,6 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
   }
 
   private static String getSurfaceKey(Store.Note note) {
-    // Use the fact that surface and note have parent/child keys to very quickly
-    // determine the surface key for a particular note.
     return KeyFactory.keyToString(note.getKey().getParent());
   }
 
@@ -136,34 +126,26 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
 
       final Store.Author me = api.getOrCreateNewAuthor(user);
 
-      // Find an author with the given email address. If we can't find it, we'll
-      // return null to the client to indicate that the author does not exist
       final Store.Author author = api.tryGetAuthor(email);
       if (author == null) {
         return null;
       }
 
-      // Verify that author has access to the surface that is being changed.
       if (!me.hasSurface(key)) {
         throw new Service.AccessDeniedException();
       }
 
       final Store.Surface surface = api.getSurface(key);
-      // If the author already belongs to the surface, we return success without
-      // making any changes to the store.
       if (!author.hasSurface(key)) {
 
         cache.deleteSurfaceKeys(author.getEmail());
         cache.deleteSurface(surface.getKey());
 
-        // Add the surface key to the author object. Since we'll be updating an
-        // object, carry out the operation in a transaction.
         final Transaction txA = api.begin();
         author.addSurface(surface);
         api.saveAuthor(author);
         txA.commit();
 
-        // Add the author name to the surface.
         final Transaction txB = api.begin();
         surface.addAuthorName(author.getName());
         api.saveSurface(surface);
@@ -182,14 +164,11 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
     final User user = tryGetCurrentUser(UserServiceFactory.getUserService());
     final Store.Api api = store.getApi();
     try {
-      // Convert the string version of the key to an actual key.
       final Key key = KeyFactory.stringToKey(noteKey);
       final Store.Author me = api.getOrCreateNewAuthor(user);
 
-      // Start a transaction for the Note we're updating.
       final Transaction tx = api.begin();
       final Store.Note note = api.getNote(key);
-      // Verify that the author owns the Note.
       if (!note.isOwnedBy(me)) {
         throw new Service.AccessDeniedException();
       }
@@ -197,7 +176,6 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
       final Date result = api.saveNote(note).getLastUpdatedAt();
       tx.commit();
 
-      // Invalidate the notes cache for the surface that owns this Note.
       cache.deleteNotes(getSurfaceKey(note));
       return result;
     } finally {
@@ -211,14 +189,11 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
     final User user = tryGetCurrentUser(UserServiceFactory.getUserService());
     final Store.Api api = store.getApi();
     try {
-      // Convert the string version of the key into an actual key.
       final Key key = KeyFactory.stringToKey(noteKey);
       final Store.Author me = api.getOrCreateNewAuthor(user);
 
-      // Start a transaction for the Note we're updating.
       final Transaction tx = api.begin();
       final Store.Note note = api.getNote(key);
-      // Verify that the author owns the Note.
       if (!note.isOwnedBy(me)) {
         throw new Service.AccessDeniedException();
       }
@@ -229,7 +204,6 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
       final Date result = api.saveNote(note).getLastUpdatedAt();
       tx.commit();
 
-      // Invalidate the notes cache for the surface that owns this Note.
       cache.deleteNotes(getSurfaceKey(note));
       return result;
     } finally {
@@ -243,16 +217,13 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
     final User user = tryGetCurrentUser(UserServiceFactory.getUserService());
     final Store.Api api = store.getApi();
     try {
-      // Convert the string version of the key to the actual Key.
       final Key key = KeyFactory.stringToKey(surfaceKey);
       final Store.Author me = api.getOrCreateNewAuthor(user);
 
-      // Verify that the author is actually a member of the surface.
       if (!me.hasSurface(key)) {
         throw new Service.AccessDeniedException();
       }
 
-      // Start a transaction for the surface update.
       final Transaction tx = api.begin();
       final Store.Surface surface = api.getSurface(key);
       final Store.Note note = new Store.Note(me, x, y, width, height);
@@ -263,7 +234,6 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
           .keyToString(note.getKey()), note.getLastUpdatedAt());
       tx.commit();
 
-      // Invalidate the cache for the surface.
       cache.deleteNotes(surfaceKey);
       return result;
     } finally {
@@ -287,7 +257,6 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
       api.saveAuthor(me);
       tx.commit();
 
-      // Invalidate the cached surface keys for this author.
       cache.deleteSurfaceKeys(me.getEmail());
 
       return new CreateObjectResult(KeyFactory.keyToString(surface.getKey()),
@@ -309,11 +278,9 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
     final User user = tryGetCurrentUser(UserServiceFactory.getUserService());
     final Store.Api api = store.getApi();
     try {
-      // getSurfaceKeys will return a cached entry if possible.
       final List<Key> keys = getSurfaceKeys(api, user);
       final Surface[] surfaces = new Surface[keys.size()];
       for (int i = 0, n = keys.size(); i < n; ++i) {
-        // getSurface will return a cached entry if possible.
         surfaces[i] = getSurface(api, keys.get(i));
       }
       return new GetSurfacesResult(null, surfaces);
@@ -341,13 +308,11 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
       throws AccessDeniedException {
     final Store.Api api = store.getApi();
     try {
-      // Attempt to load from cache.
       final Note[] fromCache = cache.getNotes(user, surfaceKey);
       if (fromCache != null) {
         return getNotesSinceTimestamp(fromCache, since);
       }
 
-      // Cache lookup failed, query the data store.
       final Key key = KeyFactory.stringToKey(surfaceKey);
       final Store.Author me = api.getOrCreateNewAuthor(user);
       if (!me.hasSurface(key)) {
@@ -363,26 +328,22 @@ public class ServiceImpl extends RemoteServiceServlet implements Service {
   }
 
   private Surface getSurface(Store.Api api, Key key) {
-    // Attempt to load from cache.
     final Surface fromCache = cache.getSurface(key);
     if (fromCache != null) {
       return fromCache;
     }
 
-    // Cache lookup failed, query the data store.
     return cache.putSurface(key, toClientSurface(api.getSurface(key)));
   }
 
   private List<Key> getSurfaceKeys(Store.Api api, User user) {
     final String email = user.getEmail();
 
-    // Attempt to load from cache.
     final List<Key> fromCache = cache.getSurfaceKeys(email);
     if (fromCache != null) {
       return fromCache;
     }
 
-    // Cache lookup failed, query the data store.
     final Store.Author author = api.getOrCreateNewAuthor(user);
     return cache.putSurfaceKeys(email, author.getSurfaceKeys());
   }

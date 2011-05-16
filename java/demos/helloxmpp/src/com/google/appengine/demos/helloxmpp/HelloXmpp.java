@@ -30,7 +30,6 @@ public class HelloXmpp extends HttpServlet {
     this.xmppService = XMPPServiceFactory.getXMPPService();
   }
 
-  // For testing. Real requests are POST
   public void doGet(HttpServletRequest req, HttpServletResponse res)
       throws IOException {
     Message message =new MessageBuilder()

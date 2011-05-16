@@ -69,7 +69,7 @@ class SurfaceLoader extends Timer implements AsyncCallback<GetSurfacesResult> {
     }
 
     private void start() {
-      model.getService().getSurfaces(null /* timestamp */, this);
+      model.getService().getSurfaces(null, this);
     }
 
     @Override

@@ -25,11 +25,11 @@ import com.google.gwt.user.client.Timer;
  *
  */
 public abstract class RetryTimer {
-  private static final int MAX_RETRY_DELAY = 60000 /* ms. */;
+  private static final int MAX_RETRY_DELAY = 60000;
 
-  private static final int MIN_RETRY_DELAY = 10000 /* ms. */;
+  private static final int MIN_RETRY_DELAY = 10000;
 
-  private static final int RETRY_DELAY_GROWTH_RATE = 20000 /* ms. */;
+  private static final int RETRY_DELAY_GROWTH_RATE = 20000;
 
   private int retryCount;
 

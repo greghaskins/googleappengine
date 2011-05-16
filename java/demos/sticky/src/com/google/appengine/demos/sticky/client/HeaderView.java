@@ -225,9 +225,6 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
     }
 
     public void onBlur(BlurEvent event) {
-      // Unintended blur events can happen as visibility is toggled. editMode
-      // ensures that we only handle blur when we are editing. Setting a boolean
-      // is more efficient than unhooking the handler.
       if (editMode) {
         commit();
       }
@@ -244,7 +241,6 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
       case KeyCodes.KEY_ENTER:
         commit();
         break;
-      // It is common for escape to cancel modal editing.
       case KeyCodes.KEY_ESCAPE:
         cancel();
         break;
@@ -420,7 +416,6 @@ public class HeaderView extends FlowPanel implements Model.DataObserver,
   public HeaderView(Images images, RootPanel parent, final Model model) {
     parent.add(this);
 
-    // Setup list of surfaces.
     final SurfaceListViewController controller = new SurfaceListViewController(
         model, images, "spc-button");
     parent.add(controller.getSurfaceListView());

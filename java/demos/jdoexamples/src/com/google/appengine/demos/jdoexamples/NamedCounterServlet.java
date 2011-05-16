@@ -37,7 +37,6 @@ public class NamedCounterServlet extends HttpServlet {
       NamedCounterUtils.addAndGet(req.getParameter("name"),
                                   Integer.parseInt(req.getParameter("delta")));
     } else if (action.equals("Get")) {
-      // Do nothing. The redirect will handle this.
     }
     resp.sendRedirect("/namedcounter.jsp?name=" + req.getParameter("name"));
   }

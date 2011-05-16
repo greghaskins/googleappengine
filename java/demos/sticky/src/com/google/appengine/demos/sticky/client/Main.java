@@ -107,7 +107,6 @@ public class Main extends RetryTimer implements EntryPoint, Model.LoadObserver,
 
     final Images images = GWT.create(Images.class);
 
-    // We don't want any top-level scroll bars.
     Window.enableScrolling(false);
 
     final RootPanel root = RootPanel.get();

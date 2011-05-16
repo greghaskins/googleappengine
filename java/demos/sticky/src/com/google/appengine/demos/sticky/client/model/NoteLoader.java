@@ -121,9 +121,6 @@ class NoteLoader {
       for (int i = 0, n = notes.length; i < n; ++i) {
         final Note note = notes[i];
         final Note existing = notesCache.get(note.getKey());
-        // If note does not exist, send a noted created notification.
-        // Otherwise, update the note and allow it to notify its observer that
-        // it changed.
         if (existing == null) {
           note.initialize(model);
           notesCache.put(note.getKey(), note);
@@ -197,9 +194,6 @@ class NoteLoader {
     statusObserver.onTaskStarted("Loading '"
         + model.getSelectedSurface().getTitle() + "' ...");
 
-    // If the surface has not been saved, we know there are no notes
-    // associated with it, so it is safe to just synthesize an event on the
-    // client.
     if (model.getSelectedSurface().hasKey()) {
       startInitialLoad();
     } else {

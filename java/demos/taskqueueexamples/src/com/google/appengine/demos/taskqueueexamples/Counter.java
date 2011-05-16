@@ -51,8 +51,6 @@ public class Counter {
     count += delta;
   }
 
-  /* Helper methods */
-
   public static void createOrIncrement(String name, int delta) {
     PersistenceManager pm = PMF.get().getPersistenceManager();
     Counter counter = null;

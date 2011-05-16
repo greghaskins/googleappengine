@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -32,8 +32,8 @@ import com.google.gwt.user.client.EventListener;
 public class LabelMatrix extends Widget {
 
   /**
-   * The Label Matrix 9 boxes. 
-   * Vertical: Top, Middle, Bottom. 
+   * The Label Matrix 9 boxes.
+   * Vertical: Top, Middle, Bottom.
    * Horizontal: Left, Middle, Right.
    */
   public interface Css extends CssResource {
@@ -98,7 +98,6 @@ public class LabelMatrix extends Widget {
     cell.setInnerText("Not Urgent");
     createMatrixCell(css.ml());
 
-    // Add click listener to Red cell
     DomUtils.addEventListener("click", createMatrixCell(css.mm()),
         new EventListener() {
           public void onBrowserEvent(Event event) {
@@ -106,7 +105,6 @@ public class LabelMatrix extends Widget {
           }
         });
 
-    // Add click listener to Orange cell
     DomUtils.addEventListener("click", createMatrixCell(css.mr()),
         new EventListener() {
           public void onBrowserEvent(Event event) {
@@ -116,7 +114,6 @@ public class LabelMatrix extends Widget {
 
     createMatrixCell(css.bl());
 
-    // Add click listener to Yellow cell
     DomUtils.addEventListener("click", createMatrixCell(css.bm()),
         new EventListener() {
           public void onBrowserEvent(Event event) {
@@ -124,7 +121,6 @@ public class LabelMatrix extends Widget {
           }
         });
 
-    // Add click listener to Green cell
     DomUtils.addEventListener("click", createMatrixCell(css.br()),
         new EventListener() {
           public void onBrowserEvent(Event event) {
@@ -156,7 +152,7 @@ public class LabelMatrix extends Widget {
 
   /**
    * Sets the selected label priority.
-   * 
+   *
    * @param labelPriority the priority for the label
    */
   public void setLabelPriority(int labelPriority) {

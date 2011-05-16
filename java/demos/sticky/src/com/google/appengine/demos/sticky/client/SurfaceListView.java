@@ -161,7 +161,6 @@ public class SurfaceListView extends FlowPanel implements Model.DataObserver {
 
       addDomHandler(this, ClickEvent.getType());
 
-      // Add to parent.
       SurfaceListView.this.add(this, listElement
           .<com.google.gwt.user.client.Element> cast());
     }

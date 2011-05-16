@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -48,7 +48,7 @@ public class ControlBar extends Widget {
     /**
      * Creates a control styled by a specified CSS class selector name. Performs
      * the inputed action on click.
-     * 
+     *
      * @param cssClassName
      * @param action
      */
@@ -65,7 +65,7 @@ public class ControlBar extends Widget {
         controls.get(i).getStyle().setProperty("display", "none");
       }
     }
-    
+
     public void showControls() {
       for (int i = 0, n = controls.size(); i < n; i++) {
         controls.get(i).getStyle().setProperty("display", "");
@@ -110,7 +110,7 @@ public class ControlBar extends Widget {
 
   /**
    * Constructor that enforces "must know parent at construction time" rule.
-   * 
+   *
    * @param parentElement the DOM element we want to attach to
    * @param controls the controls we want to include
    */
@@ -119,24 +119,20 @@ public class ControlBar extends Widget {
     super(parentElement);
     this.controls = controls;
     Element myBaseElem = getElement();
-    // Set the CSS styles for our root Element.
     myBaseElem.setClassName(resources.controlBarCss().controlBar());
 
-    // Add the logo.
     DivElement logo = Document.get().createDivElement();
     logo.setClassName(resources.controlBarCss().logo());
     getElement().appendChild(logo);
 
-    // Attach to the parent element
     parentElement.appendChild(myBaseElem);
-    // Attach the controls to us
     controls.attach(this);
   }
 
   public void enableControls() {
     controls.showControls();
   }
-  
+
   public void disableControls() {
     controls.hideControls();
   }

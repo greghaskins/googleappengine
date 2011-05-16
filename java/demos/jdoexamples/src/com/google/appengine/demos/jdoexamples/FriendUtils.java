@@ -36,12 +36,11 @@ public class FriendUtils {
                                  String friendLastName,
                                  String friendFirstName) {
     PersistenceManager pm = PMF.get().getPersistenceManager();
-    
+
     String meKey = KeyFactory.keyToString(getKeyForName(lastName, firstName));
     String otherKey = KeyFactory.keyToString(
         getKeyForName(friendLastName, friendFirstName));
-    
-    // First create the friend if he doesn't already exist.
+
     Friend other = null;
     try {
       pm.currentTransaction().begin();
@@ -69,7 +68,6 @@ public class FriendUtils {
     pm.close();
     pm = PMF.get().getPersistenceManager();
 
-    // Then add a reference to the friend to my list.
     Friend me = null;
     try {
       pm.currentTransaction().begin();
@@ -94,17 +92,17 @@ public class FriendUtils {
       }
     }
   }
-  
+
   public static List<Friend> getFriendsOf(String lastName, String firstName) {
     PersistenceManager pm = PMF.get().getPersistenceManager();
-    
+
     Query query = pm.newQuery(Friend.class);
     String myKey = KeyFactory.keyToString(getKeyForName(lastName, firstName));
     query.declareParameters("String myKey");
     query.setFilter("friends == myKey");
     query.setOrdering("lastName ASC, firstName ASC");
     List<Friend> friends = (List<Friend>) query.execute(myKey);
-    
+
     return friends;
   }
 }

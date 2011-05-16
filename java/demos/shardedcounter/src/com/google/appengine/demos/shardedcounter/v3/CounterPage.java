@@ -65,9 +65,7 @@ public class CounterPage extends HttpServlet {
     CounterFactory factory = new CounterFactory();
     ShardedCounter counter = factory.getCounter("test'\"counter");
     if (counter == null) {
-      // Create a counter with 0 shards.
       counter = factory.createCounter("test'\"counter");
-      // Add a first shard to the counter.
       counter.addShard();
       resp.getWriter().println(
           "<p>No counter named 'test'\"counter', so we created one.</p>");
@@ -83,7 +81,6 @@ public class CounterPage extends HttpServlet {
 
   private void displayCounts(ShardedCounter counter, HttpServletResponse resp)
       throws IOException {
-    // Displays the overall count for the counter and the number of shards.
     displayCount(counter, resp);
     displayNumberOfShards(counter.getNumShards(), resp);
   }

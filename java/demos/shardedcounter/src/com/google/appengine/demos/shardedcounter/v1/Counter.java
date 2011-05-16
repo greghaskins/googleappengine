@@ -58,7 +58,6 @@ public class Counter {
 
   public void addShards(int count) {
     LimitedCounterShard newShard = new LimitedCounterShard();
-    // Set a value of 1 for now so we can count shards.
     newShard.setCount(new Integer(1));
 
     PersistenceManager pm = PMF.get().getPersistenceManager();

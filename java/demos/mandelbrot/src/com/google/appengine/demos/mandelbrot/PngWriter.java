@@ -1,17 +1,4 @@
 // Copyright 2009 Google Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
 package com.google.appengine.demos.mandelbrot;
 
 import java.io.BufferedOutputStream;
@@ -65,11 +52,11 @@ public class PngWriter implements ImageWriter {
     header.write(IHDR);
     writeUnsignedInt(header, width);
     writeUnsignedInt(header, height);
-    header.write(8); // depth
-    header.write(2); // direct model
-    header.write(0); // compression
-    header.write(0); // no filter
-    header.write(0); // no interlace
+    header.write(8);
+    header.write(2);
+    header.write(0);
+    header.write(0);
+    header.write(0);
     crc.reset();
     crc.update(header.toByteArray());
     out.write(header.toByteArray());
@@ -83,7 +70,7 @@ public class PngWriter implements ImageWriter {
     byte[] scanLines = new byte[width * height * BYTES_PER_PIXEL + height];
     for (int i = 0; i < width * height; i++) {
       if (i % width == 0) {
-        zipStream.write(0); // filter
+        zipStream.write(0);
       }
 
       int pixel = source.getPixel(i % width, i / width);
@@ -117,7 +104,6 @@ public class PngWriter implements ImageWriter {
     try {
       return value.getBytes("US-ASCII");
     } catch (UnsupportedEncodingException ex) {
-      // Should not happen.
       throw new RuntimeException(ex);
     }
   }

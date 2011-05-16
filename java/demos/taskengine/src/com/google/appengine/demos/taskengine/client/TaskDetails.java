@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -68,8 +68,6 @@ public class TaskDetails extends Page {
       TaskDetails.Resources resources) {
     TaskDetails.Css css = resources.taskDetailsCss();
 
-    // Setup the controls that will be added to the top bar of the TaskDetails
-    // page.
     Controls controls = new Controls(resources);
     controls.addControl(css.back(), new EventListener() {
       public void onBrowserEvent(Event event) {
@@ -97,7 +95,6 @@ public class TaskDetails extends Page {
     Element contentElem = getContentContainer();
     contentElem.setClassName(resources.taskDetailsCss().taskDetails());
 
-    // We build up our Task Form
     titleField = Document.get().createElement("input").cast();
     contentElem.appendChild(createLabelledFieldGroup("*Title:", titleField));
 
@@ -108,7 +105,7 @@ public class TaskDetails extends Page {
     detailsField = Document.get().createTextAreaElement();
     contentElem.appendChild(createLabelledFieldGroup("Details:", detailsField));
 
-    saveButton = Document.get().createPushButtonElement();   
+    saveButton = Document.get().createPushButtonElement();
     saveButton.getStyle().setPropertyPx("marginLeft", 15);
 
     cancelButton = Document.get().createPushButtonElement();
@@ -118,7 +115,6 @@ public class TaskDetails extends Page {
     contentElem.appendChild(cancelButton);
     contentElem.appendChild(saveButton);
 
-    // create and attach event listeners
     hookEventListeners();
   }
 
@@ -132,13 +128,12 @@ public class TaskDetails extends Page {
   /**
    * Displays the details of a Task. If no task is specified then we assume we
    * are creating a new Task.
-   * 
+   *
    * @param task the {@link Task} we are viewing the details of. If this is
    *          null then we assume we are creating a new Task.
    */
   public void view(Task task) {
     currentTask = task;
-    // Set the text correctly on the buttons
     if (task != null) {
       saveButton.setInnerText("Save Task");
       populateFields();
@@ -176,7 +171,6 @@ public class TaskDetails extends Page {
     DomUtils.addEventListener("click", saveButton, new EventListener() {
       public void onBrowserEvent(Event event) {
         if (currentTask == null) {
-          // We have a new Task
           currentTask = new Task("", titleField.getValue(),
               detailsField.getValue(), labelMatrix.getCurrentLabelPriority(),
               false);
@@ -186,7 +180,6 @@ public class TaskDetails extends Page {
             currentTask = null;
           }
         } else {
-          // We are editing a task
           int oldPriority = currentTask.getLabelPriority();
           currentTask.setTitle(titleField.getValue());
           currentTask.setDetails(detailsField.getValue());
@@ -213,7 +206,6 @@ public class TaskDetails extends Page {
   }
 
   private boolean validateFields(Task potentialTask) {
-    // Title and Label must be set.
     if (potentialTask.getTitle().equals("")
         || potentialTask.getLabelPriority() < 0) {
       DomUtils.getWindow().alert("Title and Label must be filled in.");

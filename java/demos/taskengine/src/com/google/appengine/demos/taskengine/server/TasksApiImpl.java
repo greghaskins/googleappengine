@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -49,23 +49,17 @@ public class TasksApiImpl extends RemoteServiceServlet implements TasksApi {
       PersistenceManager pm = pmf.getPersistenceManager();
       List<Task> tasks = getPersistedTasksForUser(email, pm);
 
-      // AppEngine datastore does not allow multiple conditional operators. So
-      // we need to select all tasks for this user and then do our own hash
-      // join.
       HashMap<String, Task> managedTaskHash = new HashMap<String, Task>();
       for (int i = 0; i < tasks.size(); i++) {
         Task task = tasks.get(i);
         managedTaskHash.put(task.getId(), task);
       }
 
-      // Delete the tasks we need to delete.
       for (int i = 0; i < tasksToDelete.length; i++) {
         String idOfTaskToDelete = tasksToDelete[i];
         Object toDelete = managedTaskHash.get(idOfTaskToDelete);
         if (toDelete != null) {
           pm.deletePersistent(toDelete);
-          // We want to return at least one non-null String Id as a weak
-          // indication that the deletes happened.
           lastTaskDeletedId = idOfTaskToDelete;
         }
       }
@@ -97,10 +91,6 @@ public class TasksApiImpl extends RemoteServiceServlet implements TasksApi {
       detachedTasks = (List<Task>) pm.detachCopyAll(persistedTasks);
       pm.close();
 
-      // This pattern is not the cleanest. But so that we don't have to create
-      // another GWT serializable wrapper type, we reuse the TaskData type and
-      // simply special case the first entry in the returned array to have
-      // meta data about the logged in user.
       Task metaTask = new Task();
       metaTask.setEmail(email);
       metaTask.setDetails(userService.createLogoutURL(
@@ -121,15 +111,12 @@ public class TasksApiImpl extends RemoteServiceServlet implements TasksApi {
       email = user.getEmail();
       task.setEmail(email);
       if (task.getId() == null) {
-        // We are adding a new Task to the data store
         return persistNewTask(task);
       } else {
-        // We need to update an existing record
         return updateExistingTask(task);
       }
     }
 
-    // User not logged in
     return null;
   }
 

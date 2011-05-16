@@ -1,0 +1,145 @@
+// Copyright 2007 Google Inc. All rights reserved.
+
+package com.google.appengine.api.datastore;
+
+import com.google.apphosting.api.ApiProxy.ApiConfig;
+import com.google.apphosting.api.DatastorePb.NextRequest;
+import com.google.apphosting.api.DatastorePb.QueryResult;
+import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
+
+import java.util.List;
+import java.util.concurrent.Future;
+
+/**
+ * Concrete implementation of QueryResultsSource which knows how to
+ * make callbacks back into the datastore to retrieve more entities
+ * for the specified cursor.
+ *
+ */
+class QueryResultsSourceImpl implements QueryResultsSource {
+  private static final int AT_LEAST_ONE = -1;
+
+  private final ApiConfig apiConfig;
+  private final int chunkSize;
+  private final int offset;
+  private final Transaction txn;
+
+  private Future<QueryResult> nextResult;
+  private int skippedResults;
+
+  public QueryResultsSourceImpl(ApiConfig apiConfig, FetchOptions fetchOptions, Transaction txn,
+      Future<QueryResult> firstResult) {
+    this.apiConfig = apiConfig;
+    this.chunkSize = fetchOptions.getChunkSize() != null ?
+        fetchOptions.getChunkSize() : AT_LEAST_ONE;
+    this.offset = fetchOptions.getOffset() != null ?
+        fetchOptions.getOffset() : 0;
+    this.txn = txn;
+    this.nextResult = firstResult;
+    this.skippedResults = -1;
+  }
+
+  @Override
+  public boolean hasMoreEntities() {
+    return nextResult != null;
+  }
+
+  @Override
+  public int getNumSkipped() {
+    return skippedResults;
+  }
+
+  @Override
+  public Cursor loadMoreEntities(List<Entity> buffer) {
+    return loadMoreEntities(AT_LEAST_ONE, buffer);
+  }
+
+  @Override
+  public Cursor loadMoreEntities(int numberToLoad, List<Entity> buffer) {
+    TransactionImpl.ensureTxnActive(txn);
+    if (nextResult != null) {
+      if (numberToLoad == 0 &&
+          offset <= skippedResults) {
+        return null;
+      }
+
+      int previousSize = buffer.size();
+      QueryResult res = FutureHelper.quietGet(nextResult);
+      nextResult = null;
+      processQueryResult(res, buffer);
+
+      if (res.isMoreResults()) {
+        NextRequest req = new NextRequest();
+        req.getMutableCursor().copyFrom(res.getCursor());
+        if (res.hasCompiledCursor()) {
+          req.setCompile(true);
+        }
+
+        boolean setCount = true;
+        if (numberToLoad <= 0) {
+          setCount = false;
+          if (chunkSize != AT_LEAST_ONE) {
+            req.setCount(chunkSize);
+          }
+          if (numberToLoad == AT_LEAST_ONE) {
+            numberToLoad = 1;
+          }
+        }
+
+        while (
+            (skippedResults < offset ||
+            buffer.size() - previousSize < numberToLoad) &&
+            res.isMoreResults()) {
+          if (skippedResults < offset) {
+            req.setOffset(offset - skippedResults);
+          } else {
+            req.clearOffset();
+          }
+          if (setCount) {
+            req.setCount(Math.max(chunkSize, numberToLoad - buffer.size() + previousSize));
+          }
+          res = new QueryResult();
+          DatastoreApiHelper.makeSyncCall(apiConfig, "Next", req, res);
+          processQueryResult(res, buffer);
+        }
+
+        if (res.isMoreResults()) {
+          if (chunkSize != AT_LEAST_ONE) {
+            req.setCount(chunkSize);
+          } else {
+            req.clearCount();
+          }
+          req.clearOffset();
+          nextResult = DatastoreApiHelper.makeAsyncCall(apiConfig, "Next", req, new QueryResult());
+        }
+      }
+      return res.hasCompiledCursor() ? new Cursor(res.getCompiledCursor()) : null;
+    }
+    return null;
+  }
+
+  /**
+   * Helper function to process the query results.
+   *
+   * This function adds results to the given buffer, updates {@link
+   * #skippedResults} and will force res.isMoreResults() to be false
+   * if no progress was made.
+   *
+   * @param res The {@link QueryResult} to process
+   * @param buffer the buffer to which to add results
+   */
+  private void processQueryResult(QueryResult res, List<Entity> buffer) {
+    if (skippedResults < 0) {
+      skippedResults = 0;
+    } else if (res.getSkippedResults() <= 0 && res.resultSize() <= 0) {
+      res.setMoreResults(false);
+      return;
+    }
+
+    skippedResults += res.getSkippedResults();
+    for (EntityProto entityProto : res.results()) {
+      buffer.add(EntityTranslator.createFromPb(entityProto));
+    }
+  }
+
+}

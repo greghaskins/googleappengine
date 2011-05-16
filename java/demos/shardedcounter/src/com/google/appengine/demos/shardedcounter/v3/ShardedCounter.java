@@ -52,8 +52,6 @@ public class ShardedCounter {
       cache = CacheManager.getInstance().getCacheFactory().createCache(
           Collections.emptyMap());
     } catch (CacheException e) {
-      // It's ok if we can't initialize our cache object since we can fall
-      // back to querying the datastore.
     }
   }
 
@@ -113,7 +111,6 @@ public class ShardedCounter {
       pm.close();
     }
 
-    // Update the cache with the count we just found.
     if (cache != null) {
       cache.put("count" + counterName, new Integer(sum));
     }
@@ -130,7 +127,6 @@ public class ShardedCounter {
     }
 
     int numShards = 0;
-    // Find the current number of shards for this DatastoreCounter.
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {
       DatastoreCounter current = getThisCounter(pm);
@@ -141,7 +137,6 @@ public class ShardedCounter {
       pm.close();
     }
 
-    // Update the cached value for the number of shards.
     if (cache != null) {
       cache.put("shards" + counterName, new Integer(numShards));
     }
@@ -155,21 +150,18 @@ public class ShardedCounter {
 
   public int addShards(int count) {
     int numShards = 0;
-    // Find the initial shard count for this Counter.
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {
       DatastoreCounter current = getThisCounter(pm);
       if (current != null) {
         numShards = current.getShardCount().intValue();
         current.setShardCount(numShards + count);
-        // Save the increased shard count for this Counter.
         pm.makePersistent(current);
       }
     } finally {
       pm.close();
     }
 
-    // Create new shard objects for this counter.
     pm = PMF.get().getPersistenceManager();
     try {
       for (int i = 0; i < count; i++) {
@@ -202,7 +194,6 @@ public class ShardedCounter {
       }
     }
 
-    // Find how many shards are in this counter.
     int shardCount = 0;
     PersistenceManager pm = PMF.get().getPersistenceManager();
     try {
@@ -212,7 +203,6 @@ public class ShardedCounter {
       pm.close();
     }
 
-    // Choose the shard randomly from the available shards.
     Random generator = new Random();
     int shardNum = generator.nextInt(shardCount);
 

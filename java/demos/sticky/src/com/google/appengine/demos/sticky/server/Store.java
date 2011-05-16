@@ -116,17 +116,13 @@ public class Store {
       try {
         return getAuthor(user.getEmail());
       } catch (JDOObjectNotFoundException e) {
-        // If an author wasn't found, we create a new one and save it to the
-        // store.
 
-        // First, persist a default surface for the author.
         final Transaction txA = begin();
         final Surface surface = new Surface("My First Surface");
         surface.addAuthorName(user.getNickname());
         saveSurface(surface);
         txA.commit();
 
-        // Then, create a new author based on the information in user.
         final Transaction txB = begin();
         final Author author = new Author(user.getEmail(), user.getNickname());
         author.addSurface(surface);
@@ -178,7 +174,6 @@ public class Store {
      * @return <code>surface</code>, for call chaining
      */
     public Surface saveSurface(Surface surface) {
-      // Update the last updated value before saving.
       surface.lastUpdatedAt = new Date();
       return manager.makePersistent(surface);
     }

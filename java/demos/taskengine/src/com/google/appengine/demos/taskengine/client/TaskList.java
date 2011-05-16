@@ -1,12 +1,12 @@
 /*
  * Copyright 2009 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -65,7 +65,7 @@ public class TaskList extends Page {
 
   /**
    * Resources for this Widget.
-   * 
+   *
    */
   public interface Resources extends ControlBar.Resources {
     @Source("resources/checkBox.png")
@@ -121,7 +121,6 @@ public class TaskList extends Page {
     }
 
     public void removeFromList() {
-      // unhook event handlers
       for (int i = 0, n = removers.size(); i < n; i++) {
         removers.get(i).remove();
       }
@@ -157,7 +156,6 @@ public class TaskList extends Page {
     }
 
     private void hookEventListeners() {
-      // This is what happens when we click on the task label
       DomUtils.addEventListener("click", titleElem, new EventListener() {
 
         public void onBrowserEvent(Event event) {
@@ -167,7 +165,6 @@ public class TaskList extends Page {
 
       });
 
-      // This is what happens when we click the checkbox
       DomUtils.addEventListener("click", checkMark, new EventListener() {
 
         public void onBrowserEvent(Event event) {
@@ -194,7 +191,6 @@ public class TaskList extends Page {
       TaskList.Resources resources) {
     TaskList.Css css = resources.taskListCss();
 
-    // Setup the controls that will be added to the top bar the TaskList screen
     Controls controls = new Controls(resources);
     controls.addControl(css.plus(), new EventListener() {
 
@@ -248,7 +244,6 @@ public class TaskList extends Page {
     container.appendChild(urgentNotImportantTasks);
     container.appendChild(notUrgentNotImportantTasks);
 
-    // Login stuff
     userEmail = Document.get().createDivElement();
     userEmail.getStyle().setProperty("display", "inline-block");
     userEmail.setInnerText("Loading...");
@@ -262,7 +257,7 @@ public class TaskList extends Page {
 
   /**
    * Adds a task to our TaskList UI.
-   * 
+   *
    * @param task the task to be added
    * @return returns the {@link TaskRow} that was attached to the UI
    */
@@ -270,7 +265,6 @@ public class TaskList extends Page {
     Element container = getTaskListContainerElement(task.getLabelPriority());
     TaskRow row = new TaskRow(container, task);
 
-    // For tasks that we have read from storage that are completed.
     if (row.getTaskData().isFinished()) {
       completedTasks.add(row);
     }
@@ -291,7 +285,7 @@ public class TaskList extends Page {
   /**
    * Gets the tasks currently marked for completion and moves them over to
    * pending delete confirmation.
-   * 
+   *
    * @return the tasks currently marked for completion
    */
   public String[] getCompletedTaskIdsAndMoveToPending() {
@@ -328,19 +322,17 @@ public class TaskList extends Page {
   /**
    * Method invoked if our RPC times out, returns an error, or if we are not
    * logged in.
-   * 
+   *
    * @param loginUrl server generated sign in url, or <code>null</code> if we
    *          time out or have an RPC error.
    */
   public void notifyNotLoggedIn(String loginUrl) {
     getControlBar().disableControls();
     if (loginUrl != null) {
-      // We are definitely not signed in
       userEmail.setInnerText("Please ");
       logoutLink.setHref(loginUrl);
       logoutLink.setInnerText(" signin.");
     } else {
-      // We had an RPC error or a timeout
       userEmail.setInnerText("Network slow :(, please wait or");
       logoutLink.setHref("javascript:location.reload(true);");
       logoutLink.setInnerText(" Try Refresh");
@@ -349,7 +341,7 @@ public class TaskList extends Page {
 
   /**
    * Sets the logout link and displays the currently signed in user.
-   * 
+   *
    * @param userEmailStr the email address for the currently signed in user.
    * @param logoutUrl the logout url.
    */
@@ -359,13 +351,12 @@ public class TaskList extends Page {
     logoutLink.setHref(logoutUrl);
     logoutLink.setInnerText(" logout");
 
-    // In case we get a login response after already disabling controls
     getControlBar().enableControls();
   }
 
   /**
    * Updates the UI to reflect that the underlying task has been updated.
-   * 
+   *
    * @param task the {@link Task} that has been updated.
    * @param oldPriority the old priority level of the task.
    * @return returns the updated {@link TaskRow}.

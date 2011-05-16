@@ -1,3 +1,129 @@
+Version 1.5.0.1
+===============
+- Fixed a bug that caused appengine-jsr107cache-1.5.0.jar to be empty.
+
+Version 1.5.0
+=============
+- Support for Backends which allow developers to create infrastructure
+  components that complement the existing dynamic apps that App Engine already
+  provides. Instances of a backend can maintain state, be addressed
+  individually, and are not subject to per-request time limits. They can also be
+  configured to consume more memory and CPU than ordinary dynamic instances.
+- Task Queues support pull mode, allowing for more control over task queue work
+  rates. To use pull queues, include the 'mode' element in your queue.xml.
+- Pull queues are supported by a REST API, allowing access from outside App
+  Engine. To use the REST API, you must also include a valid ACL section
+  specifying which users can lease tasks from the pull queue.
+- Task Queue payload limits have been increased. Queues support 100KB per task.
+  Within App Engine, the new limit is 32 MB per batch of tasks. With the REST
+  API the limit is 1 MB per batch.
+- HTTP request and response sizes have been increased to 32 MB.
+- We have removed the rate quotas for requests, datastore operations,
+  memcache operations, and image API operations. Resource quotas still apply.
+- When creating new applications, developers will now see the High Replication
+  Datastore as the default configuration option.  Developers that still wish to
+  use the Master/Slave configuration must explicitly choose this option at
+  application creation time.
+- The Task Queue maximum configurable processing rate has been increased to
+  500/s.
+- Modified Dashboard latency graphs to indicate they only include dynamic
+  requests.
+- We have added two restrictions to the Mail API to improve the reliability
+  of the service for all applications.
+  - Emails must be sent from email accounts managed by Google (either Gmail or
+    a domain signed up for Google Apps).
+  - Reduced the number of free recipients per day from 2000 to 100 for new
+    applications.
+- Fixed an issue where the Javadoc for the File API was not generated.
+- Fixed an issue where the API Deadlines were not being enforced in the SDK.
+- Fixed an issue with Federated Users causing the Admin Console dataviewer to
+  fail.
+    http://code.google.com/p/googleappengine/issues/detail?id=384
+- Fixed an issue causing SDK URL Fetch not to work behind proxy.
+    http://code.google.com/p/googleappengine/issues/detail?id=544
+- Fixed an issue deploying an app with version set to 0.
+    http://code.google.com/p/googleappengine/issues/detail?id=735
+- Improved support for reserving an app id that is a canonicalized version of
+  a user's Gmail address.
+    http://code.google.com/p/googleappengine/issues/detail?id=1196
+- Added a more useful error message for unavailable App Ids.
+    http://code.google.com/p/googleappengine/issues/detail?id=1303
+- Added clearer error messaging for invalid transactions in the SDK.
+    http://code.google.com/p/googleappengine/issues/detail?id=1357
+- Added better error messages for cron.xml parsing.
+    http://code.google.com/p/googleappengine/issues/detail?id=1490
+- Entity constructors are now consistent with KeyFactory constructors.
+    http://code.google.com/p/googleappengine/issues/detail?id=1626
+- Task Queue names can now include the "_" character.
+    http://code.google.com/p/googleappengine/issues/detail?id=1723
+- The sender of an email is no longer BCC'd when they are already included in
+  the email.
+    http://code.google.com/p/googleappengine/issues/detail?id=1907
+- Added a more helpful error message when trying to send email to a malformed
+  address.
+    http://code.google.com/p/googleappengine/issues/detail?id=2386
+- The SDK now returns an error if the Content-length header is not included in a
+  post request, matching production.
+    http://code.google.com/p/googleappengine/issues/detail?id=2512
+- Fixed an issue where the wrong type of error was being thrown on HTTP request
+  timeout.
+    http://code.google.com/p/googleappengine/issues/detail?id=2464
+- Fixed an issue where the Admin Console didn't keep the app version viewed
+  consistent across actions.
+    http://code.google.com/p/googleappengine/issues/detail?id=4023
+- Added Javadocs for TaskOptions.taskName().
+    http://code.google.com/p/googleappengine/issues/detail?id=4316
+- Fixed a typo in the Admin Console on the New App page.
+    http://code.google.com/p/googleappengine/issues/detail?id=4620
+- Fixed an issue where sending mail from an app registered on the HR datastore
+  required the app id be prefaced with s~.
+    http://code.google.com/p/googleappengine/issues/detail?id=4671
+- Fixed an issue where HTTP POST was broken in the SDK if the Content-Length
+  header was specified.
+    http://code.google.com/p/googleappengine/issues/detail?id=4836
+
+Version 1.4.3
+=============
+- Added FileService API that allows writing to and reading from files in
+  blobstore.
+- You can now specify cron execution for a time interval between a start and end
+  time.
+- You can now configure the specific application version to which a task queue
+  or cron job will send requests.
+- The Admin Console Task Queues page now displays a more accurate estimate of
+  queue size for queues containing more than 2000 tasks.
+- Java applications can enable concurrent request support by setting
+  <threadsafe> to True in their appengine-web.xml. This flag indicates that
+  request handlers for your app are thread safe and multiple request handlers
+  may safely run at the same time in the same memory space for your application.
+- Deferred library support now available in Java.
+    http://code.google.com/p/googleappengine/issues/detail?id=2381
+- Remote API library now available in Java. This can be used in conjunction with
+  apps using either the Java or the Python runtime.
+- The Java SDK now supports kindless and ancestor only queries.
+- Fixed an issue where JAX-WS clients in the SDK could not handle receiving a
+  SOAP fault.
+- Fixed an issue where the SDK did not support fetching HTTPS URLs.
+- Fixed an issue where no link was displayed in the Admin Console blobstore
+  viewer for an unnamed blob.
+- Fixed an issue where the Admin Console data viewer couldn't edit entities
+  with ByteString properties.
+    http://code.google.com/p/googleappengine/issues/detail?id=2367
+- Fixed an issue where the Admin Console crashed when using a non-ascii
+  key_name.
+    http://code.google.com/p/googleappengine/issues/detail?id=2451
+- The Disable Application admin function has been button-ized.
+    http://code.google.com/p/googleappengine/issues/detail?id=4323
+- Fixed a regex validation issue in the queue.xml file that caused some uploads
+  to break.
+    http://code.google.com/p/googleappengine/issues/detail?id=4365
+- Fixed an issue where the Java SDK Task Queue did not support 10 minute
+  timeouts.
+    http://code.google.com/p/googleappengine/issues/detail?id=4564
+- Fixed an issue where the Channel API in the SDK didn't properly send messages
+  with unicode characters.
+    http://code.google.com/p/googleappengine/issues/detail?id=4675
+
 Version 1.4.2
 =============
 - You can now vacuum datastore indexes with the Java SDK.

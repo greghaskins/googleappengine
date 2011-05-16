@@ -56,7 +56,6 @@ public class SurfaceView extends FlowPanel implements Model.DataObserver {
 
     private final TextArea content = new TextArea();
 
-    // Dragging state.
     private boolean dragging;
 
     private int dragOffsetX, dragOffsetY;
@@ -70,7 +69,6 @@ public class SurfaceView extends FlowPanel implements Model.DataObserver {
       setStyleName("note");
       note.setObserver(this);
 
-      // Build simple DOM Structure.
       final Element elem = getElement();
       elem.getStyle().setProperty("position", "absolute");
       titleElement = elem.appendChild(Document.get().createDivElement());
