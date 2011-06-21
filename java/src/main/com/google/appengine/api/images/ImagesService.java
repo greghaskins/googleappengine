@@ -94,7 +94,7 @@ public interface ImagesService {
    * @param image     image to be transformed
    * @param encoding  output encoding to be used
    * @return A future containing the transformed image or one of the
-   * exceptions documented for {@link #applyTransformAsync(Transform, Image, OutputEncoding)}.
+   * exceptions documented for {@link #applyTransform(Transform, Image, OutputEncoding)}.
    */
   public Future<Image> applyTransformAsync(Transform transform, Image image,
                               OutputEncoding encoding);
@@ -125,10 +125,47 @@ public interface ImagesService {
    * @param image     image to be transformed
    * @param settings  output settings to be used
    * @return A future containing the transformed image or one of the
-   * exceptions documented for {@link #applyTransformAsync(Transform, Image, OutputSettings)}.
+   * exceptions documented for {@link #applyTransform(Transform, Image, OutputSettings)}.
    */
   public Future<Image> applyTransformAsync(Transform transform, Image image,
                                            OutputSettings settings);
+
+  /**
+   * Applies the provided {@code transform} to the provided {@code image}
+   * encoding the transformed image stored using {@code outputSettings}
+   * interpreting {@code image} according to {@code inputSettings}.
+   * The transform is applied in place to the provided image.
+   *
+   * @param transform transform to be applied
+   * @param image     image to be transformed
+   * @param inputSettings input settings to be used
+   * @param outputSettings output settings to be used
+   * @return transformed image
+   * @throws IllegalArgumentException If {@code transform}, {@code image},
+   * {@code inputSettings} or {@code outputSettings} are invalid.
+   * @throws ImagesServiceFailureException If there is a problem with the
+   * Images Service
+   */
+  public Image applyTransform(Transform transform, Image image,
+                              InputSettings inputSettings, OutputSettings ouputSettings);
+
+  /**
+   * Asynchronously applies the provided {@code transform} to the provided
+   * {@code image} encoding the transformed image stored using {@code settings}
+   * interpreting {@code image} according to {@code inputSettings}.
+   * The transform is applied in place to the provided image.
+   *
+   * @param transform transform to be applied
+   * @param image     image to be transformed
+   * @param inputSettings input settings to be used
+   * @param outputSettings  output settings to be used
+   * @return A future containing the transformed image or one of the
+   * exceptions documented for
+   * {@link #applyTransform(Transform, Image, InputSettings, OutputSettings)}.
+   */
+  public Future<Image> applyTransformAsync(Transform transform, Image image,
+                                           InputSettings inputSettings,
+                                           OutputSettings outputSettings);
 
   /**
    * Applies the provided {@link Collection} of {@link Composite}s using a

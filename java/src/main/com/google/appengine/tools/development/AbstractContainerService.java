@@ -9,16 +9,16 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXmlReader;
+import com.google.apphosting.utils.config.AppYaml;
 import com.google.apphosting.utils.config.BackendsXml;
 import com.google.apphosting.utils.config.BackendsXmlReader;
-import com.google.apphosting.utils.config.AppYaml;
 import com.google.apphosting.utils.config.WebXml;
 import com.google.apphosting.utils.config.WebXmlReader;
 import com.google.common.base.Join;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.beans.PropertyChangeSupport;
-import java.lang.reflect.Field;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Permissions;
@@ -93,12 +94,12 @@ public abstract class AbstractContainerService implements ContainerService {
    * track of the original values all system properties at start-up.
    * We then restore the values when we shutdown the server.
    */
-  private final Properties originalSysProps = new Properties();
+  private static Properties originalSysProps = null;
 
   /**
    * The severity of an environment variable mismatch.
    */
-  private EnvironmentVariableMismatchSeverity envVarMismatchSeverity =
+  private static EnvironmentVariableMismatchSeverity envVarMismatchSeverity =
       EnvironmentVariableMismatchSeverity.ERROR;
 
   /**
@@ -133,6 +134,10 @@ public abstract class AbstractContainerService implements ContainerService {
         serverInitLatch.await();
       }
 
+      public boolean simulateProductionLatencies() {
+        return false;
+      }
+
       public boolean enforceApiDeadlines() {
         return !Boolean.getBoolean("com.google.appengine.disable_api_deadlines");
       }
@@ -156,6 +161,12 @@ public abstract class AbstractContainerService implements ContainerService {
     stopHotDeployScanner();
     stopContainer();
     restoreSystemProperties();
+  }
+
+  /** {@inheritdoc} */
+  public Map<String, String> getServiceProperties() {
+    return ImmutableMap.of("appengine.dev.inbound-services",
+                           Join.join(",", appEngineWebXml.getInboundServices()));
   }
 
   /**
@@ -242,14 +253,18 @@ public abstract class AbstractContainerService implements ContainerService {
       appEngineWebXml.setAppId("no_app_id");
     }
     webXml = new WebXmlReader(webAppDir.getAbsolutePath()).readWebXml();
-    setSystemProperties(appEngineWebXml);
-    checkEnvironmentVariables(appEngineWebXml);
-    updateLoggingConfiguration(originalSysProps, appEngineWebXml.getSystemProperties());
+    staticInitialize(appEngineWebXml, appDir);
     webXml.validate();
 
     backendsXml = new BackendsXmlReader(webAppDir.getAbsolutePath()).readBackendsXml();
 
     ApiProxy.setEnvironmentForCurrentThread(new LocalInitializationEnvironment(appEngineWebXml));
+  }
+
+  private static synchronized void staticInitialize(AppEngineWebXml appEngineWebXml, File appDir) {
+    setSystemProperties(appEngineWebXml);
+    checkEnvironmentVariables(appEngineWebXml);
+    updateLoggingConfiguration(originalSysProps, appEngineWebXml.getSystemProperties(), appDir);
   }
 
   protected void restoreSystemProperties() {
@@ -301,7 +316,7 @@ public abstract class AbstractContainerService implements ContainerService {
   /**
    * Sets system properties that are defined in {@link AppEngineWebXml}.
    */
-  protected void setSystemProperties(AppEngineWebXml appEngineWebXml) {
+  private static void setSystemProperties(AppEngineWebXml appEngineWebXml) {
     SystemProperty.environment.set(SystemProperty.Environment.Value.Development);
     String release = SdkInfo.getLocalVersion().getRelease();
     if (release == null) {
@@ -311,7 +326,12 @@ public abstract class AbstractContainerService implements ContainerService {
     SystemProperty.applicationId.set(appEngineWebXml.getAppId());
     SystemProperty.applicationVersion.set(appEngineWebXml.getMajorVersionId() + ".1");
 
-    originalSysProps.putAll(System.getProperties());
+    synchronized (AbstractContainerService.class) {
+      if (null == originalSysProps){
+        originalSysProps = new Properties();
+        originalSysProps.putAll(System.getProperties());
+      }
+    }
     System.getProperties().putAll(appEngineWebXml.getSystemProperties());
   }
 
@@ -323,13 +343,13 @@ public abstract class AbstractContainerService implements ContainerService {
    * @param systemProperties
    * @param userSystemProperties
    */
-  protected void updateLoggingConfiguration(Properties systemProperties,
-      Map<String, String> userSystemProperties) {
+  private static void updateLoggingConfiguration(Properties systemProperties,
+      Map<String, String> userSystemProperties, File appDir) {
     String userConfigFile = userSystemProperties.get(LOGGING_CONFIG_FILE);
 
-    Properties userProperties = loadPropertiesFile(userConfigFile);
+    Properties userProperties = loadPropertiesFile(userConfigFile, appDir);
     String sdkConfigFile = systemProperties.getProperty(LOGGING_CONFIG_FILE);
-    Properties sdkProperties = loadPropertiesFile(sdkConfigFile);
+    Properties sdkProperties = loadPropertiesFile(sdkConfigFile, appDir);
     Properties allProperties = new Properties();
     if (sdkProperties != null) {
       allProperties.putAll(sdkProperties);
@@ -357,7 +377,7 @@ public abstract class AbstractContainerService implements ContainerService {
     }
   }
 
-  private void fireLogManagerChangeListener() {
+  private static void fireLogManagerChangeListener() {
     try {
       Field field = LogManager.class.getDeclaredField("changes");
       field.setAccessible(true);
@@ -368,7 +388,7 @@ public abstract class AbstractContainerService implements ContainerService {
     }
   }
 
-  private Properties loadPropertiesFile(String file) {
+  private static Properties loadPropertiesFile(String file, File appDir) {
     if (file == null) {
       return null;
     }
@@ -396,7 +416,7 @@ public abstract class AbstractContainerService implements ContainerService {
     }
   }
 
-  protected void checkEnvironmentVariables(AppEngineWebXml appEngineWebXml) {
+  private static void checkEnvironmentVariables(AppEngineWebXml appEngineWebXml) {
     Map<String, String> missingEnvEntries = Maps.newHashMap();
     for (Map.Entry<String, String> entry : appEngineWebXml.getEnvironmentVariables().entrySet()) {
       if (!entry.getValue().equals(System.getenv(entry.getKey()))) {

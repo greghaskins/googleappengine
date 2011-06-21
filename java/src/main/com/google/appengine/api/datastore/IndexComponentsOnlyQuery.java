@@ -112,7 +112,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
       }
     }
 
-    for (String eqProp : equalityProps) {
+    for (String eqProp : new HashSet<String>(equalityProps)) {
       indexProps.add(newIndexProperty(eqProp, Direction.ASCENDING));
     }
 

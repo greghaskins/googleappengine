@@ -2,6 +2,8 @@
 
 package com.google.appengine.api.channel;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -47,4 +49,16 @@ public interface ChannelService {
    */
   ChannelMessage parseMessage(HttpServletRequest request);
 
+  /**
+   * Parse the incoming presence in {@code request}. This method should only
+   * be called within a channel presence request handler.
+   *
+   * @param request the source HTTP request.
+   * @return the incoming {@link ChannelPresence}.
+   *
+   * @throws IOException if the MIME body isn't parseable.
+   * @throws IllegalArgumentException if the HTTP request doesn't conform to
+   * expectations.
+   */
+  ChannelPresence parsePresence(HttpServletRequest request) throws IOException;
 }

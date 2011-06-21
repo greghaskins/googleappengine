@@ -2,6 +2,8 @@
 
 package com.google.appengine.api.xmpp;
 
+import com.google.appengine.api.utils.HttpRequestParser;
+
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +18,7 @@ import javax.mail.MessagingException;
  * Message} object.
  *
  */
-class InboundMessageParser extends InboundParser {
+class InboundMessageParser extends HttpRequestParser {
   static Message parseMessage(HttpServletRequest request) throws IOException {
     try {
       MimeMultipart multipart = parseMultipartRequest(request);

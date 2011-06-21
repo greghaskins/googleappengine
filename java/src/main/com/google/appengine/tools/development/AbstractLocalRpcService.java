@@ -27,4 +27,8 @@ public abstract class AbstractLocalRpcService implements LocalRpcService {
   public Double getMaximumDeadline(boolean isOfflineRequest) {
     return null;
   }
+
+  public Integer getMaxApiRequestSize() {
+    return null;
+  }
 }

@@ -52,7 +52,7 @@ public final class DatastoreServiceConfig {
 
   private int maxRpcSizeBytes = DEFAULT_RPC_SIZE_LIMIT_BYTES;
   private int maxBatchWriteEntities = DEFAULT_MAX_BATCH_WRITE_ENTITIES;
-  private int maxBatchReadEntities = DEFAULT_MAX_BATCH_GET_KEYS;
+  private int maxBatchReadEntities = DEFAULT_MAX_BATCH_GET_KEYS; private Integer maxEntityGroupsPerRpc;
 
   /**
    * Cannot be directly instantiated, use {@link Builder} instead.
@@ -69,6 +69,7 @@ public final class DatastoreServiceConfig {
     maxRpcSizeBytes = config.maxRpcSizeBytes;
     maxBatchWriteEntities = config.maxBatchWriteEntities;
     maxBatchReadEntities = config.maxBatchReadEntities;
+    maxEntityGroupsPerRpc = config.maxEntityGroupsPerRpc;
   }
 
   /**
@@ -166,6 +167,34 @@ public final class DatastoreServiceConfig {
   }
 
   /**
+   * Sets the maximum number of entity groups that can be represented in a
+   * single rpc.
+   *
+   * For a non-transactional operation that involves more entity groups than the
+   * maximum, the operation will be performed by executing multiple, asynchronous
+   * rpcs to the datastore, each of which has no more entity groups represented
+   * than the maximum.  So, if a put() operation has 8 entity groups and the
+   * maximum is 3, we will send 3 rpcs, 2 with 3 entity groups and 1 with 2
+   * entity groups.  This is a performance optimization - in many cases
+   * multiple, small, asynchronous rpcs will finish faster than a single large
+   * asynchronous rpc.  The optimal value for this property will be
+   * application-specific, so experimentation is encouraged.
+   *
+   * @param maxEntityGroupsPerRpc the maximum number of entity groups per rpc
+   * @throws IllegalArgumentException if maxEntityGroupsPerRpc is not greater
+   * than zero
+   * @return {@code this} (for chaining)
+   */
+  public DatastoreServiceConfig maxEntityGroupsPerRpc(int maxEntityGroupsPerRpc) {
+    if (maxEntityGroupsPerRpc <= 0) {
+      throw new IllegalArgumentException("maxEntityGroupsPerRpc must be > 0, got "
+          + maxEntityGroupsPerRpc);
+    }
+    this.maxEntityGroupsPerRpc = maxEntityGroupsPerRpc;
+    return this;
+  }
+
+  /**
    * @return The {@code ImplicitTransactionManagementPolicy} to use.
    */
   public ImplicitTransactionManagementPolicy getImplicitTransactionManagementPolicy() {
@@ -177,6 +206,13 @@ public final class DatastoreServiceConfig {
    */
   public ReadPolicy getReadPolicy() {
     return readPolicy;
+  }
+
+  /**
+   * @return The maximum number of entity groups per rpc.  Can be {@code null}.
+   */
+  public Integer getMaxEntityGroupsPerRpc() {
+    return maxEntityGroupsPerRpc;
   }
 
   /**
@@ -232,11 +268,24 @@ public final class DatastoreServiceConfig {
     }
 
     /**
+     * Create a {@link DatastoreServiceConfig} with the given maximum entity
+     * groups per rpc.
+     * @param maxEntityGroupsPerRpc the maximum entity groups per rpc to set.
+     * @return The newly created DatastoreServiceConfig instance.
+     *
+     * @see {@link DatastoreServiceConfig#maxEntityGroupsPerRpc(int)}
+     */
+    public static DatastoreServiceConfig withMaxEntityGroupsPerRpc(int maxEntityGroupsPerRpc) {
+      return withDefaults().maxEntityGroupsPerRpc(maxEntityGroupsPerRpc);
+    }
+    /**
      * Helper method for creating a {@link DatastoreServiceConfig}
      * instance with default values: Implicit transactions are disabled, reads
      * execute with {@link Consistency#STRONG}, and no deadline is
      * provided.  When no deadline is provided, datastore rpcs execute with the
      * system-defined deadline.
+     *
+     * @return The newly created DatastoreServiceConfig instance.
      */
     public static DatastoreServiceConfig withDefaults() {
       return new DatastoreServiceConfig();

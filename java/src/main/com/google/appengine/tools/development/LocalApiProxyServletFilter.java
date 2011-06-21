@@ -86,6 +86,10 @@ public class LocalApiProxyServletFilter implements Filter {
 
       public void waitForServerToStart() { }
 
+      public boolean simulateProductionLatencies() {
+        return true;
+      }
+
       public boolean enforceApiDeadlines() {
         return false;
       }

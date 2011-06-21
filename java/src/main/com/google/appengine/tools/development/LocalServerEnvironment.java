@@ -34,4 +34,10 @@ public interface LocalServerEnvironment {
    * @return Whether or not API deadlines should be emulated.
    */
   boolean enforceApiDeadlines();
+
+  /**
+   * @return Whether or not local services should simulate production
+   * latencies.
+   */
+  boolean simulateProductionLatencies();
 }

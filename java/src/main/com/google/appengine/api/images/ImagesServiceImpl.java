@@ -14,6 +14,7 @@ import com.google.appengine.api.images.ImagesServicePb.ImagesHistogramResponse;
 import com.google.appengine.api.images.ImagesServicePb.ImagesServiceError.ErrorCode;
 import com.google.appengine.api.images.ImagesServicePb.ImagesTransformRequest;
 import com.google.appengine.api.images.ImagesServicePb.ImagesTransformResponse;
+import com.google.appengine.api.images.ImagesServicePb.InputSettings.ORIENTATION_CORRECTION_TYPE;
 import com.google.appengine.api.images.ImagesServicePb.OutputSettings.MIME_TYPE;
 import com.google.appengine.api.utils.FutureWrapper;
 import com.google.apphosting.api.ApiProxy;
@@ -58,8 +59,20 @@ final class ImagesServiceImpl implements ImagesService {
   /** {@inheritDoc} */
   public Image applyTransform(Transform transform, Image image,
                               OutputSettings settings) {
+    return applyTransform(transform, image, new InputSettings(), settings);
+  }
+
+  /** {@inheritDoc} */
+  public Future<Image> applyTransformAsync(Transform transform, final Image image,
+      OutputSettings settings) {
+    return applyTransformAsync(transform, image, new InputSettings(), settings);
+  }
+
+  /** {@inheritDoc} */
+  public Image applyTransform(Transform transform, Image image,
+                              InputSettings inputSettings, OutputSettings outputSettings) {
     ImagesTransformRequest.Builder request =
-      generateImagesTransformRequest(transform, image, settings);
+      generateImagesTransformRequest(transform, image, inputSettings, outputSettings);
 
     ImagesTransformResponse.Builder response = ImagesTransformResponse.newBuilder();
     try {
@@ -77,9 +90,9 @@ final class ImagesServiceImpl implements ImagesService {
 
   /** {@inheritDoc} */
   public Future<Image> applyTransformAsync(Transform transform, final Image image,
-      OutputSettings settings) {
+      InputSettings inputSettings, OutputSettings outputSettings) {
     final ImagesTransformRequest.Builder request =
-      generateImagesTransformRequest(transform, image, settings);
+      generateImagesTransformRequest(transform, image, inputSettings, outputSettings);
 
     Future<byte[]> responseBytes = ApiProxy.makeAsyncCall(PACKAGE, "Transform",
         request.build().toByteArray());
@@ -255,12 +268,13 @@ final class ImagesServiceImpl implements ImagesService {
   }
 
   private ImagesTransformRequest.Builder generateImagesTransformRequest(
-      Transform transform, Image image, OutputSettings settings)
+      Transform transform, Image image, InputSettings inputSettings, OutputSettings outputSettings)
       throws IllegalArgumentException{
     ImagesTransformRequest.Builder request =
       ImagesTransformRequest.newBuilder()
       .setImage(convertImageData(image))
-      .setOutput(convertOutputSettings(settings));
+      .setOutput(convertOutputSettings(outputSettings))
+      .setInput(convertInputSettings(inputSettings));
     transform.apply(request);
 
     if (request.getTransformCount() > MAX_TRANSFORMS_PER_REQUEST) {
@@ -293,6 +307,19 @@ final class ImagesServiceImpl implements ImagesService {
       default:
         throw new IllegalArgumentException(
             "Invalid output encoding requested");
+    }
+    return pbSettings.build();
+  }
+
+  private ImagesServicePb.InputSettings convertInputSettings(InputSettings settings) {
+    ImagesServicePb.InputSettings.Builder pbSettings = ImagesServicePb.InputSettings.newBuilder();
+    switch(settings.getOrientationCorrection()) {
+      case UNCHANGED_ORIENTATION:
+        pbSettings.setCorrectExifOrientation(ORIENTATION_CORRECTION_TYPE.UNCHANGED_ORIENTATION);
+        break;
+      case CORRECT_ORIENTATION:
+        pbSettings.setCorrectExifOrientation(ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION);
+        break;
     }
     return pbSettings.build();
   }

@@ -52,6 +52,9 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class BackendServersFilter implements Filter {
 
+  static final String BACKEND_REDIRECT_ATTRIBUTE = "com.google.appengine.backend.BackendName";
+  static final String INSTANCE_REDIRECT_ATTRIBUTE = "com.google.appengine.backend.BackendInstance";
+
   static final int SERVER_BUSY_ERROR_CODE = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
   static final int SERVER_STOPPED_ERROR_CODE = HttpServletResponse.SC_NOT_FOUND;
@@ -118,7 +121,8 @@ public class BackendServersFilter implements Filter {
 
     if (hrequest.getRequestURI().equals("/_ah/start") && directServerName != null) {
       return RequestType.SERVER_STARTUP_REQUEST;
-    } else if (hrequest.getAttribute(BackendService.REQUEST_HEADER_BACKEND_REDIRECT) != null) {
+    } else if (hrequest.getAttribute(BACKEND_REDIRECT_ATTRIBUTE) != null &&
+               hrequest.getAttribute(BACKEND_REDIRECT_ATTRIBUTE) instanceof String) {
       return RequestType.REDIRECTED_SERVER_REQUEST;
     } else if (directServerName != null) {
       int directServerReplica = backendServersManager.getServerInstanceFromPort(serverPort);
@@ -210,9 +214,8 @@ public class BackendServersFilter implements Filter {
 
     try {
       logger.finer(String.format("forwarding request to server: %d.%s", instance, requestedServer));
-      hrequest.setAttribute(BackendService.REQUEST_HEADER_BACKEND_REDIRECT, requestedServer);
-      hrequest.setAttribute(
-          BackendService.REQUEST_HEADER_INSTANCE_REDIRECT, Integer.valueOf(instance));
+      hrequest.setAttribute(BACKEND_REDIRECT_ATTRIBUTE, requestedServer);
+      hrequest.setAttribute(INSTANCE_REDIRECT_ATTRIBUTE, Integer.valueOf(instance));
       backendServersManager.forwardToServer(requestedServer, instance, hrequest, hresponse);
     } finally {
       backendServersManager.returnServingPermit(requestedServer, instance);
@@ -252,10 +255,11 @@ public class BackendServersFilter implements Filter {
   private void doRedirectedServerRequest(
       HttpServletRequest hrequest, HttpServletResponse hresponse, FilterChain chain)
       throws IOException, ServletException {
-    String backendServer =
-        (String) hrequest.getAttribute(BackendService.REQUEST_HEADER_BACKEND_REDIRECT);
-    Integer instance =
-        (Integer) hrequest.getAttribute(BackendService.REQUEST_HEADER_INSTANCE_REDIRECT);
+    Object backendServerValue = hrequest.getAttribute(BACKEND_REDIRECT_ATTRIBUTE);
+    String backendServer = (backendServerValue instanceof String) ?
+        ((String) backendServerValue) : null;
+    Object instanceValue = hrequest.getAttribute(INSTANCE_REDIRECT_ATTRIBUTE);
+    Integer instance = (instanceValue instanceof Integer) ? ((Integer) instanceValue) : null;
     logger.finest("redirected request to server instance: " + instance + "." + backendServer);
 
     injectServerApiInfo(backendServer, instance);

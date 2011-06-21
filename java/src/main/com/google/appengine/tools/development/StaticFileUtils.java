@@ -103,7 +103,11 @@ public class StaticFileUtils {
     if (!request.getMethod().equals(HttpMethods.HEAD)) {
       String ifms = request.getHeader(HttpHeaders.IF_MODIFIED_SINCE);
       if (ifms != null) {
-        long ifmsl = request.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE);
+        long ifmsl = -1;
+        try {
+          ifmsl = request.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE);
+        } catch (IllegalArgumentException e) {
+        }
         if (ifmsl != -1) {
           if (resource.lastModified() <= ifmsl) {
             response.reset();
@@ -114,7 +118,11 @@ public class StaticFileUtils {
         }
       }
 
-      long date = request.getDateHeader(HttpHeaders.IF_UNMODIFIED_SINCE);
+      long date = -1;
+      try {
+        date = request.getDateHeader(HttpHeaders.IF_UNMODIFIED_SINCE);
+      } catch (IllegalArgumentException e) {
+      }
       if (date != -1) {
         if (resource.lastModified() > date) {
           response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);

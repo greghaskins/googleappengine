@@ -22,8 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,6 +84,10 @@ class ApiProxyLocalImpl implements ApiProxyLocal {
 
   private final Map<String, LocalRpcService> serviceCache =
       new ConcurrentHashMap<String, LocalRpcService>();
+
+  private final Map<String, Method> methodCache = new ConcurrentHashMap<String, Method>();
+  final Map<Method, LatencySimulator> latencySimulatorCache =
+      new ConcurrentHashMap<Method, LatencySimulator>();
 
   private final Map<String, String> properties = new HashMap<String, String>();
 
@@ -307,8 +311,17 @@ class ApiProxyLocalImpl implements ApiProxyLocal {
   public void setProperties(Map<String,String> properties) {
     this.properties.clear();
     if (properties != null) {
-      this.properties.putAll(properties);
+      this.appendProperties(properties);
     }
+  }
+
+  /**
+   * Appends the given service properties to {@code properties}.
+   *
+   * @param properties a set of properties to append for local services.
+   */
+  public void appendProperties(Map<String,String> properties) {
+    this.properties.putAll(properties);
   }
 
   /**
@@ -321,27 +334,38 @@ class ApiProxyLocalImpl implements ApiProxyLocal {
     }
 
     serviceCache.clear();
+    methodCache.clear();
+    latencySimulatorCache.clear();
 
   }
 
-  int getMaxApiRequestSize(String packageName) {
-    if ("images".equals(packageName)) {
-      return 32 << 20;
-    } else if ("memcache".equals(packageName)) {
-      return 32 << 20;
-    } else if ("mail".equals(packageName)) {
-      return 32 << 20;
+  int getMaxApiRequestSize(LocalRpcService rpcService) {
+    Integer size = rpcService.getMaxApiRequestSize();
+    if (size == null) {
+      return MAX_API_REQUEST_SIZE;
     }
-    return MAX_API_REQUEST_SIZE;
+    return size;
   }
 
   private Method getDispatchMethod(LocalRpcService service, String packageName, String methodName) {
-    String dispatchName = Character.toLowerCase(methodName.charAt(0)) +
-     methodName.substring(1);
+    String dispatchName = Character.toLowerCase(methodName.charAt(0)) + methodName.substring(1);
+    String methodId = packageName + "." + dispatchName;
+    Method method = methodCache.get(methodId);
+    if (method != null) {
+      return method;
+    }
+    for (Method candidate : service.getClass().getMethods()) {
+      if (dispatchName.equals(candidate.getName())) {
+        methodCache.put(methodId, candidate);
+        LatencyPercentiles latencyPercentiles = candidate.getAnnotation(LatencyPercentiles.class);
+        if (latencyPercentiles == null) {
 
-    for (Method method : service.getClass().getMethods()) {
-      if (dispatchName.equals(method.getName())) {
-        return method;
+          latencyPercentiles = service.getClass().getAnnotation(LatencyPercentiles.class);
+        }
+        if (latencyPercentiles != null) {
+          latencySimulatorCache.put(candidate, new LatencySimulator(latencyPercentiles));
+        }
+        return candidate;
       }
     }
     throw new CallNotFoundException(packageName, methodName);
@@ -380,7 +404,7 @@ class ApiProxyLocalImpl implements ApiProxyLocal {
           throw new CallNotFoundException(packageName, methodName);
         }
 
-        if (requestBytes.length > getMaxApiRequestSize(packageName)) {
+        if (requestBytes.length > getMaxApiRequestSize(service)) {
           throw new RequestTooLargeException(packageName, methodName);
         }
 
@@ -389,7 +413,17 @@ class ApiProxyLocalImpl implements ApiProxyLocal {
         Class<?> requestClass = method.getParameterTypes()[1];
         Object request = convertBytesToPb(requestBytes, requestClass);
 
-        return convertPbToBytes(method.invoke(service, status, request));
+        long start = clock.getCurrentTime();
+        try {
+          return convertPbToBytes(method.invoke(service, status, request));
+        } finally {
+          LatencySimulator latencySimulator = latencySimulatorCache.get(method);
+          if (latencySimulator != null) {
+            if (context.getLocalServerEnvironment().simulateProductionLatencies()) {
+              latencySimulator.simulateLatency(clock.getCurrentTime() - start, service, request);
+            }
+          }
+        }
       } catch (IllegalAccessException e) {
         throw new UnknownException(packageName, methodName, e);
       } catch (InstantiationException e) {

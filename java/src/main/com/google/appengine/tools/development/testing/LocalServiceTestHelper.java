@@ -65,6 +65,7 @@ public class LocalServiceTestHelper {
   private Map<String, Object> envAttributes = new HashMap<String, Object>();
   private Clock clock;
   private boolean enforceApiDeadlines = false;
+  private boolean simulateProdLatencies = false;
 
   /**
    * Constructs a LocalServiceTestHelper with the provided configurations.
@@ -191,6 +192,17 @@ public class LocalServiceTestHelper {
    */
   public LocalServiceTestHelper setEnforceApiDeadlines(boolean val) {
     this.enforceApiDeadlines = val;
+    return this;
+  }
+
+  /**
+   * Determines whether or not local services should simulate production
+   * latencies.  The default is {@code false}.
+   * @param val
+   * @return {@code this} (for chaining)
+   */
+  public LocalServiceTestHelper setSimulateProdLatencies(boolean val) {
+    this.simulateProdLatencies = val;
     return this;
   }
 
@@ -359,7 +371,7 @@ public class LocalServiceTestHelper {
    * Subclass and override to provide your own implementation.
    */
   protected LocalServerEnvironment newLocalServerEnvironment() {
-    return new TestLocalServerEnvironment(enforceApiDeadlines);
+    return new TestLocalServerEnvironment(enforceApiDeadlines, simulateProdLatencies);
   }
 
   /**

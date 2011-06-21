@@ -1,6 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 
-package com.google.appengine.api.xmpp;
+package com.google.appengine.api.utils;
 
 import com.google.common.io.ByteStreams;
 
@@ -20,12 +20,12 @@ import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ContentType;
 
 /**
- * {@code InboundParser} encapsulates helper methods used to parse incoming {@code
+ * {@code HttpRequestParser} encapsulates helper methods used to parse incoming {@code
  * multipart/form-data} HTTP requests. Subclasses should use these methods to parse specific
  * requests into useful data structures.
  *
  */
-class InboundParser {
+public class HttpRequestParser {
 
   protected static MimeMultipart parseMultipartRequest(HttpServletRequest req)
       throws IOException, MessagingException {

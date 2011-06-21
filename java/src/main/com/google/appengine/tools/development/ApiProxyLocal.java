@@ -29,6 +29,13 @@ public interface ApiProxyLocal extends Delegate<Environment> {
   void setProperties(Map<String,String> properties);
 
   /**
+   * Appends the given service properties to {@code properties}.
+   *
+   * @param properties a set of properties to append for local services.
+   */
+  void appendProperties(Map<String,String> properties);
+
+  /**
    * Stops all services started by this ApiProxy and releases
    * all of its resources.
    */

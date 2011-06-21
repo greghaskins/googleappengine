@@ -12,9 +12,11 @@ import java.io.File;
 class TestLocalServerEnvironment implements LocalServerEnvironment {
 
   private final boolean enforceApiDeadlines;
+  private final boolean simulateProdLatencies;
 
-  TestLocalServerEnvironment(boolean enforceApiDeadlines) {
+  TestLocalServerEnvironment(boolean enforceApiDeadlines, boolean simulateProdLatencies) {
     this.enforceApiDeadlines = enforceApiDeadlines;
+    this.simulateProdLatencies = simulateProdLatencies;
   }
 
   @Override
@@ -39,5 +41,10 @@ class TestLocalServerEnvironment implements LocalServerEnvironment {
   @Override
   public boolean enforceApiDeadlines() {
     return enforceApiDeadlines;
+  }
+
+  @Override
+  public boolean simulateProductionLatencies() {
+    return simulateProdLatencies;
   }
 }

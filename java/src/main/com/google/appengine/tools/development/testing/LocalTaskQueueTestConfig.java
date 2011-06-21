@@ -1,10 +1,20 @@
 // Copyright 2009 Google Inc. All Rights Reserved.
 package com.google.appengine.tools.development.testing;
 
+import com.google.appengine.api.taskqueue.DeferredTask;
+import com.google.appengine.api.taskqueue.DeferredTaskContext;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.taskqueue.dev.LocalTaskQueue;
 import com.google.appengine.api.taskqueue.dev.LocalTaskQueueCallback;
+import com.google.appengine.api.urlfetch.URLFetchServicePb;
 import com.google.appengine.tools.development.ApiProxyLocal;
+import com.google.protobuf.ByteString;
+
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Config for accessing the local task queue in tests. Default behavior is to
@@ -19,6 +29,7 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
   private String queueXmlPath;
   private Class<? extends LocalTaskQueueCallback> callbackClass;
   private boolean shouldCopyApiProxyEnvironment = false;
+  private CountDownLatch taskExecutionLatch;
 
   /**
    * Disables/enables automatic task execution. If you enable automatic task
@@ -92,6 +103,26 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
     return this;
   }
 
+  /**
+   * Sets a {@link CountDownLatch} that the thread executing the task will
+   * decrement after a {@link LocalTaskQueueCallback} finishes execution.  This
+   * makes it easy for tests to block until a task queue task runs.  Note that
+   * the latch is only used when a callback class is provided (via
+   * {@link #setCallbackClass(Class)}) and when automatic task execution is
+   * enabled (via {@link #setDisableAutoTaskExecution(boolean)}).  Also note
+   * that a {@link CountDownLatch} cannot be reused, so if you have a test that
+   * requires the ability to "reset" a CountDownLatch you can pass an instance
+   * of {@link TaskCountDownLatch}, which exposes additional methods that help
+   * with this.
+   *
+   * @param latch The latch.
+   * @return {@code this} (for chaining)
+   */
+  public LocalTaskQueueTestConfig setTaskExecutionLatch(CountDownLatch latch) {
+    this.taskExecutionLatch = latch;
+    return this;
+  }
+
   @Override
   public void setUp() {
     ApiProxyLocal proxy = LocalServiceTestHelper.getApiProxyLocal();
@@ -105,6 +136,9 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
       if (!disableAutoTaskExecution) {
         EnvSettingTaskqueueCallback.setProxyProperties(
             proxy, callbackClass, shouldCopyApiProxyEnvironment);
+        if (taskExecutionLatch != null) {
+          EnvSettingTaskqueueCallback.setTaskExecutionLatch(taskExecutionLatch);
+        }
         callbackName = EnvSettingTaskqueueCallback.class.getName();
       } else {
         callbackName = callbackClass.getName();
@@ -116,8 +150,10 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
   @Override
   public void tearDown() {
     LocalTaskQueue ltq = getLocalTaskQueue();
-    for (String queueName : ltq.getQueueStateInfo().keySet()) {
-      ltq.flushQueue(queueName);
+    if (ltq != null) {
+      for (String queueName : ltq.getQueueStateInfo().keySet()) {
+        ltq.flushQueue(queueName);
+      }
     }
   }
 
@@ -125,4 +161,150 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
     return (LocalTaskQueue) LocalServiceTestHelper.getLocalService(LocalTaskQueue.PACKAGE);
   }
 
+  /**
+   * A {@link LocalTaskQueueCallback} implementation that automatically detects
+   * and runs tasks with a {@link DeferredTask} payload.
+   *
+   * Requests with a payload that is not a {@link DeferredTask} are dispatched
+   * to {@link #executeNonDeferredRequest}, which by default does nothing.
+   * If you need to handle a payload like this you can extend the class and
+   * override this method to do what you need.
+   */
+  public static class DeferredTaskCallback implements LocalTaskQueueCallback {
+    @Override
+    public void initialize(Map<String, String> properties) {
+    }
+
+    @Override
+    public int execute(URLFetchServicePb.URLFetchRequest req) {
+      for (URLFetchServicePb.URLFetchRequest.Header header : req.getHeaderList()) {
+        if (header.getKey().equals("content-type") &&
+            DeferredTaskContext.RUNNABLE_TASK_CONTENT_TYPE.equals(header.getValue())) {
+          ByteString payload = req.getPayload();
+          ByteArrayInputStream bais = new ByteArrayInputStream(payload.toByteArray());
+          ObjectInputStream ois;
+          try {
+            ois = new ObjectInputStream(bais);
+            DeferredTask deferredTask = (DeferredTask) ois.readObject();
+            deferredTask.run();
+            return 200;
+          } catch (Exception e) {
+            return 500;
+          }
+        }
+      }
+      return executeNonDeferredRequest(req);
+    }
+
+    /**
+     * Broken out to make it easy for subclasses to provide their own behavior
+     * when the request payload is not a {@link DeferredTask}.
+     */
+    protected int executeNonDeferredRequest(URLFetchServicePb.URLFetchRequest req) {
+      return 200;
+    }
+  }
+
+  /**
+   * A {@link CountDownLatch} extension that can be reset.  Pass an instance of
+   * this class to {@link LocalTaskQueueTestConfig#setTaskExecutionLatch)} when
+   * you need to reuse the latch within or across tests.  Only one thread at a
+   * time should ever call any of the {@link #await} or {@link #reset} methods.
+   */
+  public static final class TaskCountDownLatch extends CountDownLatch {
+    private int initialCount;
+    private CountDownLatch latch;
+
+    public TaskCountDownLatch(int count) {
+      super(count);
+      reset(count);
+    }
+
+    @Override
+    public long getCount() {
+      return latch.getCount();
+    }
+
+    @Override
+    public String toString() {
+      return latch.toString();
+    }
+
+    @Override
+    /**
+     * {@inheritDoc}
+     * Only one thread at a time should call this.
+     */
+    public void await() throws InterruptedException {
+      latch.await();
+    }
+
+    @Override
+    /**
+     * {@inheritDoc}
+     * Only one thread at a time should call this.
+     */
+    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+      return latch.await(timeout, unit);
+    }
+
+    @Override
+    public void countDown() {
+      latch.countDown();
+    }
+
+    /**
+     * Shorthand for calling {@link #await()} followed by {@link #reset()}.
+     * Only one thread at a time should call this.
+     */
+    public void awaitAndReset() throws InterruptedException {
+      awaitAndReset(initialCount);
+    }
+
+    /**
+     * Shorthand for calling {@link #await()} followed by {@link #reset(int)}.
+     * Only one thread at a time should call this.
+     */
+    public void awaitAndReset(int count) throws InterruptedException {
+      await();
+      reset(count);
+    }
+
+    /**
+     * Shorthand for calling {@link #await(long, java.util.concurrent.TimeUnit)} followed by
+     * {@link #reset()}.  Only one thread at a time should call this.
+     */
+    public boolean awaitAndReset(long timeout, TimeUnit unit)
+        throws InterruptedException {
+      return awaitAndReset(timeout, unit, initialCount);
+    }
+
+    /**
+     * Shorthand for calling {@link #await(long, java.util.concurrent.TimeUnit)} followed by
+     * {@link #reset(int)}.  Only one thread at a time should call this.
+     */
+    public boolean awaitAndReset(long timeout, TimeUnit unit, int count)
+        throws InterruptedException {
+      boolean result = await(timeout, unit);
+      reset(count);
+      return result;
+    }
+
+    /**
+     * Resets the latch to its most recent initial count.  Only one thread at a
+     * time should call this.
+     */
+    public void reset() {
+      reset(initialCount);
+    }
+
+    /**
+     * Resets the latch to the provided count.  Only one thread at a time
+     * should call this.
+     */
+    public void reset(int count) {
+      this.initialCount = count;
+      this.latch = new CountDownLatch(count);
+    }
+  }
 }

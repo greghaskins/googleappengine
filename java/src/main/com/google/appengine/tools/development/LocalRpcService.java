@@ -96,4 +96,10 @@ public interface LocalRpcService {
    * case a global maximum deadline will be used instead.
    */
   Double getMaximumDeadline(boolean isOfflineRequest);
+
+  /**
+   * Returns the maximum size of an encoded API request in bytes, or
+   * {@code null} for the default size.
+   */
+  Integer getMaxApiRequestSize();
 }

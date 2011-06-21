@@ -144,7 +144,7 @@ public final class DataTypeUtils {
           checkSupportedSingleValue(name, obj);
         }
       } else if (requireMultiValue) {
-        throw new IllegalArgumentException("A colleciton with at least one value is required.");
+        throw new IllegalArgumentException("A collection with at least one value is required.");
       }
     } else if (requireMultiValue) {
       throw new IllegalArgumentException("A collection of values is required.");

@@ -7,6 +7,7 @@ import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXmlReader;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Provides the backing servlet container support for the {@link DevAppServer},
@@ -101,4 +102,12 @@ public interface ContainerService {
    * @see EnvironmentVariableMismatchSeverity
    */
   void setEnvironmentVariableMismatchSeverity(EnvironmentVariableMismatchSeverity val);
+
+  /**
+   * Get a set of properties to be passed to each service, based on the
+   * AppEngineWebXml configuration.
+   *
+   * @return the map of properties to be passed to each service.
+   */
+  Map<String, String> getServiceProperties();
 }

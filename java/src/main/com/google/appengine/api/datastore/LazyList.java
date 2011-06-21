@@ -1,6 +1,9 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.appengine.api.datastore;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,12 +24,12 @@ import java.util.NoSuchElementException;
  * implementations wherever possible (which is most places).
  *
  */
-class LazyList extends AbstractList<Entity> implements QueryResultList<Entity>{
-
-  private final QueryResultIteratorImpl resultIterator;
+class LazyList extends AbstractList<Entity> implements QueryResultList<Entity>, Serializable {
+ private final transient QueryResultIteratorImpl resultIterator;
   private final List<Entity> results = new ArrayList<Entity>();
   private boolean endOfData = false;
   private boolean cleared = false;
+ private Cursor cursor = null;
 
   LazyList(QueryResultIteratorImpl resultIterator) {
     this.resultIterator = resultIterator;
@@ -294,7 +297,20 @@ class LazyList extends AbstractList<Entity> implements QueryResultList<Entity>{
   }
 
   public Cursor getCursor() {
-    forceResolveToIndex(-1, true);
-    return resultIterator.getCursor();
+    if (cursor == null && resultIterator != null) {
+      forceResolveToIndex(-1, true);
+      cursor = resultIterator.getCursor();
+    }
+    return cursor;
+  }
+
+  /**
+   * Custom serialization logic to ensure that we read the entire result set
+   * before we serialize.
+   */
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    resolveAllData();
+    cursor = getCursor();
+    out.defaultWriteObject();
   }
 }

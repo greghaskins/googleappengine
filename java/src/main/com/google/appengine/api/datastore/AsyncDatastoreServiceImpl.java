@@ -41,11 +41,6 @@ import java.util.concurrent.Future;
 class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
       implements AsyncDatastoreService {
 
-  static final String ENABLE_CLIENT_SIDE_BATCHING_PROPERTY =
-      "appengine.datastore.enableClientSideBatching";
-
-  private static final Boolean ENABLE_CLIENT_SIDE_BATCHING_DEFAULT = false;
-
   /***
    * An aggregate future that uses an iterator to match results to requested elements.
    *
@@ -137,10 +132,10 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
      * Arranges the given items by entity group.
      *
      * @param items The items to arrange by entity group.
-     * @return A {@link Map} from entity group {@link Key} to items belonging
-     * to that entity group.
+     * @return A {@link Collection} of {@link List Lists} where each
+     * {@link List} contains all items belonging to the same entity group.
      */
-    public Map<Key, List<T>> getItemsByEntityGroup(Iterable<T> items) {
+    public Collection<List<T>> getItemsByEntityGroup(Iterable<T> items) {
       Map<Key, List<T>> entitiesByEntityGroup = new LinkedHashMap<Key, List<T>>();
       for (T item : items) {
         Key entityGroupKey = extractEntityGroupKey(item);
@@ -151,7 +146,7 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
         }
         entitiesInGroup.add(item);
       }
-      return entitiesByEntityGroup;
+      return entitiesByEntityGroup.values();
     }
 
     static Key getEntityGroupKey(Key key) {
@@ -243,22 +238,38 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
   }
 
   @Override
-  public Future<Map<Key, Entity>> get(Transaction txn, final Iterable<Key> keys) {
+  public Future<Map<Key, Entity>> get(Transaction txn, Iterable<Key> keys) {
     if (keys == null) {
       throw new NullPointerException("keys cannot be null");
     }
 
-    final GetRequest baseReq = new GetRequest();
+    if (txn == null && datastoreServiceConfig.getMaxEntityGroupsPerRpc() != null &&
+        datastoreServiceConfig.getReadPolicy().getConsistency() == STRONG &&
+        getDatastoreType() == HIGH_REPLICATION) {
+      Collection<List<Key>> keysByEntityGroup = KEY_GROUPER.getItemsByEntityGroup(keys);
+      if (keysByEntityGroup.size() > 1) {
+        return doBatchGetByEntityGroups(keysByEntityGroup);
+      }
+    }
+    return doBatchGetBySize(txn, keys);
+  }
+
+  /**
+   * Executes a batch get, possibly by splitting into multiple rpcs to keep
+   * each rpc smaller than the maximum size.
+   *
+   * @param txn The transaction in which to execute the batch get.  Can be
+   * null.
+   * @param keys The {@link Key keys} of the entities to fetch.
+   *
+   * @return A {@link Future} that provides the results of the operation.
+   */
+  private Future<Map<Key, Entity>> doBatchGetBySize( Transaction txn,
+      final Iterable<Key> keys) {
+    GetRequest baseReq = new GetRequest();
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       baseReq.setTransaction(localTxnToRemoteTxn(txn));
-    } else if (clientSideBatchingIsEnabled() &&
-        datastoreServiceConfig.getReadPolicy().getConsistency() == STRONG &&
-        getDatastoreType() == HIGH_REPLICATION) {
-      Map<Key, List<Key>> keysByEntityGroup = KEY_GROUPER.getItemsByEntityGroup(keys);
-      if (keysByEntityGroup.size() > 1) {
-        return doClientSideBatchGet(keysByEntityGroup);
-      }
     }
     if (datastoreServiceConfig.getReadPolicy().getConsistency() == EVENTUAL) {
       baseReq.setFailoverMs(ARBITRARY_FAILOVER_READ_MS);
@@ -317,10 +328,30 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
         });
   }
 
-  private Future<Map<Key, Entity>> doClientSideBatchGet(Map<Key, List<Key>> keysByEntityGroup) {
+  /**
+   * Executes a batch get by executing multiple rpcs in parallel.
+   *
+   * @param keysByEntityGroup A {@link Collection} of {@link List Lists} where
+   * all keys in each list belong to the same entity group.
+   *
+   * @return A {@link Future} that provides the results of all the get() rpcs.
+   */
+  private Future<Map<Key, Entity>> doBatchGetByEntityGroups(
+      Collection<List<Key>> keysByEntityGroup) {
     List<Future<Map<Key, Entity>>> subFutures = new ArrayList<Future<Map<Key, Entity>>>();
-    for (List<Key> keysInGroup : keysByEntityGroup.values()) {
-      subFutures.add(get(null, keysInGroup));
+    List<Key> keysToGet = new ArrayList<Key>();
+    int numEntityGroups = 0;
+    for (List<Key> keysInGroup : keysByEntityGroup) {
+      keysToGet.addAll(keysInGroup);
+      numEntityGroups++;
+      if (numEntityGroups == datastoreServiceConfig.getMaxEntityGroupsPerRpc()) {
+        subFutures.add(doBatchGetBySize(null, keysToGet));
+        keysToGet = new ArrayList<Key>();
+        numEntityGroups = 0;
+      }
+    }
+    if (!keysToGet.isEmpty()) {
+      subFutures.add(doBatchGetBySize(null, keysToGet));
     }
     return new CumulativeAggregateFuture<Map<Key, Entity>, Map<Key, Entity>, Map<Key, Entity>>(
         subFutures) {
@@ -371,25 +402,40 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
   }
 
   @Override
-  public Future<List<Key>> put( Transaction txn, final Iterable<Entity> entities) {
-    final PutRequest baseReq = new PutRequest();
-    if (txn != null) {
-      TransactionImpl.ensureTxnActive(txn);
-      baseReq.setTransaction(localTxnToRemoteTxn(txn));
-    } else if (clientSideBatchingIsEnabled()) {
+  public Future<List<Key>> put( Transaction txn, Iterable<Entity> entities) {
+    if (txn == null && datastoreServiceConfig.getMaxEntityGroupsPerRpc() != null) {
       List<IndexedItem<Entity>> indexedEntities = new ArrayList<IndexedItem<Entity>>();
       int index = 0;
       for (Entity entity : entities) {
         indexedEntities.add(new IndexedItem<Entity>(entity, index++));
       }
-      Map<Key, List<IndexedItem<Entity>>> entitiesByEntityGroup =
+      Collection<List<IndexedItem<Entity>>> entitiesByEntityGroup =
           ENTITY_GROUPER.getItemsByEntityGroup(indexedEntities);
       if (entitiesByEntityGroup.size() > 1) {
-        return doClientSideBatchPut(entitiesByEntityGroup);
+        return doBatchPutByEntityGroups(entitiesByEntityGroup);
       }
     }
-    final int baseEncodedReqSize = baseReq.encodingSize();
+    return doBatchPutBySize(txn, entities);
+  }
 
+  /**
+   * Executes a batch put, possibly by splitting into multiple rpcs to keep
+   * each rpc smaller than the maximum size.
+   *
+   * @param txn The transaction in which to execute the batch put.  Can be
+   * null.
+   * @param entities The {@link Entity entities} to fetch.
+   *
+   * @return A {@link Future} that provides the results of the operation.
+   */
+  private Future<List<Key>> doBatchPutBySize( Transaction txn,
+      final Iterable<Entity> entities) {
+    PutRequest baseReq = new PutRequest();
+    if (txn != null) {
+      TransactionImpl.ensureTxnActive(txn);
+      baseReq.setTransaction(localTxnToRemoteTxn(txn));
+    }
+    final int baseEncodedReqSize = baseReq.encodingSize();
     final List<Future<PutResponse>> futures = new ArrayList<Future<PutResponse>>();
     int encodedReqSize = baseEncodedReqSize;
     PutRequest req = baseReq.clone();
@@ -433,43 +479,69 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
             }
             return keysInOrder;
           }
-
     });
   }
 
-  boolean clientSideBatchingIsEnabled() {
-    return Boolean.valueOf(System.getProperty(ENABLE_CLIENT_SIDE_BATCHING_PROPERTY,
-        ENABLE_CLIENT_SIDE_BATCHING_DEFAULT.toString()));
-  }
-
-  private Future<List<Key>> doClientSideBatchPut(
-      Map<Key, List<IndexedItem<Entity>>> entitiesByEntityGroup) {
+  /**
+   * Executes a batch put by executing multiple rpcs in parallel.
+   *
+   * @param entitiesByEntityGroup A {@link Collection} of {@link List Lists}
+   * where all entities in each list belong to the same entity group.
+   *
+   * @return A {@link Future} that provides the results of all the put() rpcs.
+   */
+  private Future<List<Key>> doBatchPutByEntityGroups(
+      Collection<List<IndexedItem<Entity>>> entitiesByEntityGroup) {
     List<Future<List<IndexedItem<Key>>>> subFutures =
         new ArrayList<Future<List<IndexedItem<Key>>>>();
-    for (final List<IndexedItem<Entity>> indexedEntitiesInGroup : entitiesByEntityGroup.values()) {
-      Iterable<Entity> entitiesInGroup = new UnwrappingIterable<Entity>(indexedEntitiesInGroup);
-      Future<List<Key>> future = put(null, entitiesInGroup);
-      Future<List<IndexedItem<Key>>> indexedFuture =
-          new FutureWrapper<List<Key>, List<IndexedItem<Key>>>(future) {
-        @Override
-        protected List<IndexedItem<Key>> wrap(List<Key> keys) throws Exception {
-          List<IndexedItem<Key>> orderedKeys = new ArrayList<IndexedItem<Key>>();
-          int keyIndex = 0;
-          for (Key key : keys) {
-            orderedKeys.add(new IndexedItem<Key>(
-                key, indexedEntitiesInGroup.get(keyIndex++).index));
-          }
-          return orderedKeys;
-        }
-
-        @Override
-        protected Throwable convertException(Throwable cause) {
-          return cause;
-        }
-      };
-      subFutures.add(indexedFuture);
+    List<IndexedItem<Entity>> entitiesToPut = new ArrayList<IndexedItem<Entity>>();
+    int numEntityGroups = 0;
+    for (List<IndexedItem<Entity>> indexedEntitiesInGroup : entitiesByEntityGroup) {
+      entitiesToPut.addAll(indexedEntitiesInGroup);
+      numEntityGroups++;
+      if (numEntityGroups == datastoreServiceConfig.getMaxEntityGroupsPerRpc()) {
+        assemblePutFuture(entitiesToPut, subFutures);
+        numEntityGroups = 0;
+      }
+    }
+    if (!entitiesToPut.isEmpty()) {
+      assemblePutFuture(entitiesToPut, subFutures);
     }
     return new SortingAggregateFuture(subFutures);
+  }
+
+  /**
+   * Assembles a {@link Future} that puts the provided entities and then adds
+   * that Future to the provided {@link List}.
+   *
+   * @param entitiesToPut The entities to put.
+   * @param subFutures The list of Futures.
+   */
+  private void assemblePutFuture(List<IndexedItem<Entity>> entitiesToPut,
+      List<Future<List<IndexedItem<Key>>>> subFutures) {
+    final List<IndexedItem<Entity>> entitiesToPutCopy =
+        new ArrayList<IndexedItem<Entity>>(entitiesToPut);
+    Iterable<Entity> unwrappedEntitiesToPut = new UnwrappingIterable<Entity>(entitiesToPutCopy);
+    Future<List<Key>> future = doBatchPutBySize(null, unwrappedEntitiesToPut);
+    Future<List<IndexedItem<Key>>> indexedFuture =
+        new FutureWrapper<List<Key>, List<IndexedItem<Key>>>(future) {
+      @Override
+      protected List<IndexedItem<Key>> wrap(List<Key> keys) throws Exception {
+        List<IndexedItem<Key>> orderedKeys = new ArrayList<IndexedItem<Key>>(keys.size());
+        int keyIndex = 0;
+        for (Key key : keys) {
+          orderedKeys.add(new IndexedItem<Key>(key, entitiesToPutCopy.get(keyIndex++).index));
+        }
+        return orderedKeys;
+      }
+
+      @Override
+      protected Throwable convertException(Throwable cause) {
+        return cause;
+      }
+    };
+    subFutures.add(indexedFuture);
+    entitiesToPut.clear();
   }
 
   /**
@@ -525,18 +597,32 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
   }
 
   @Override
-  public Future<Void> delete(Transaction txn, final Iterable<Key> keys) {
-    final DeleteRequest baseReq = new DeleteRequest();
+  public Future<Void> delete(Transaction txn, Iterable<Key> keys) {
+    if (txn == null && datastoreServiceConfig.getMaxEntityGroupsPerRpc() != null) {
+      Collection<List<Key>> keysByEntityGroup = KEY_GROUPER.getItemsByEntityGroup(keys);
+      if (keysByEntityGroup.size() > 1) {
+        return doBatchDeleteByEntityGroups(keysByEntityGroup);
+      }
+    }
+    return doBatchDeleteBySize(txn, keys);
+  }
+
+  /**
+   * Executes a batch delete, possibly by splitting into multiple rpcs to keep
+   * each rpc smaller than the maximum size.
+   *
+   * @param txn The transaction in which to execute the batch delete.  Can be
+   * null.
+   * @param keys The {@link Key keys} of the entities to delete.
+   *
+   * @return A {@link Future} that provides the results of the operation.
+   */
+  private Future<Void> doBatchDeleteBySize( Transaction txn, Iterable<Key> keys) {
+    DeleteRequest baseReq = new DeleteRequest();
 
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       baseReq.setTransaction(localTxnToRemoteTxn(txn));
-    } else if (clientSideBatchingIsEnabled()) {
-      Map<Key, List<Key>> keysByEntityGroup =
-          KEY_GROUPER.getItemsByEntityGroup(keys);
-      if (keysByEntityGroup.size() > 1) {
-        return doClientSideBatchDelete(keysByEntityGroup);
-      }
     }
     final int baseEncodedReqSize = baseReq.encodingSize();
 
@@ -584,11 +670,30 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
     });
   }
 
-  private Future<Void> doClientSideBatchDelete(
-      Map<Key, List<Key>> keysByEntityGroup) {
+  /**
+   * Executes a batch delete by executing multiple rpcs in parallel.
+   *
+   * @param keysByEntityGroup A {@link Collection} of {@link List Lists} where
+   * all keys in each list belong to the same entity group.
+   *
+   * @return A {@link Future} that provides the results of all the delete()
+   * rpcs.
+   */
+  private Future<Void> doBatchDeleteByEntityGroups(Collection<List<Key>> keysByEntityGroup) {
     List<Future<Void>> subFutures = new ArrayList<Future<Void>>();
-    for (List<Key> keysInGroup : keysByEntityGroup.values()) {
-      subFutures.add(delete(null, keysInGroup));
+    List<Key> keysToDelete = new ArrayList<Key>();
+    int numEntityGroups = 0;
+    for (List<Key> keysInGroup : keysByEntityGroup) {
+      keysToDelete.addAll(keysInGroup);
+      numEntityGroups++;
+      if (numEntityGroups == datastoreServiceConfig.getMaxEntityGroupsPerRpc()) {
+        subFutures.add(doBatchDeleteBySize(null, keysToDelete));
+        keysToDelete = new ArrayList<Key>();
+        numEntityGroups = 0;
+      }
+    }
+    if (!keysToDelete.isEmpty()) {
+      subFutures.add(doBatchDeleteBySize(null, keysToDelete));
     }
     return new CumulativeAggregateFuture<Void, Void, Void>(subFutures) {
       @Override

@@ -326,7 +326,7 @@ public interface MailService {
    * The message will be delivered asynchronously, and delivery problems
    * will result in a bounce to the admins.
    * <p>
-   * The content of the {@code to, cc, bcc} fields should be {@value
+   * The content of the {@code to, cc, bcc} fields should be {@code
    * null}.
    *
    * @param message The message to be sent.

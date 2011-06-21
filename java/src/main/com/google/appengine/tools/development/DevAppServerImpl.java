@@ -128,12 +128,13 @@ class DevAppServerImpl implements DevAppServer {
    *
    * @throws IllegalStateException if the server has already been started.
    */
+  @Override
   public void setServiceProperties(Map<String,String> properties) {
     if (serverState != ServerState.INITIALIZING) {
       String msg = "Cannot set service properties after the server has been started.";
       throw new IllegalStateException(msg);
     }
-    serviceProperties = properties;
+    serviceProperties = new HashMap<String, String>(properties);
     backendContainer.setServiceProperties(properties);
   }
 
@@ -145,6 +146,7 @@ class DevAppServerImpl implements DevAppServer {
    * @throws AppEngineConfigException If no WEB-INF directory can be found or
    * WEB-INF/appengine-web.xml does not exist.
    */
+  @Override
   public void start() throws Exception {
     if (serverState != ServerState.INITIALIZING) {
       throw new IllegalStateException("Cannot start a server that has already been started.");
@@ -162,6 +164,10 @@ class DevAppServerImpl implements DevAppServer {
     try {
       currentTimeZone = setServerTimeZone();
       mainContainer.startup();
+
+      this.serviceProperties.putAll(mainContainer.getServiceProperties());
+      localImpl.appendProperties(mainContainer.getServiceProperties());
+
       backendContainer.startupAll(mainContainer.getBackendsXml());
     } catch (BindException ex) {
       System.err.println();
@@ -250,6 +256,7 @@ class DevAppServerImpl implements DevAppServer {
    * @throws IllegalStateException If the server has not been started or has
    * already been shutdown.
    */
+  @Override
   public void shutdown() throws Exception {
     if (serverState != ServerState.RUNNING) {
       throw new IllegalStateException("Cannot shutdown a server that is not currently running.");
@@ -263,6 +270,7 @@ class DevAppServerImpl implements DevAppServer {
   /**
    * @return the servlet container listener port number.
    */
+  @Override
   public int getPort() {
     return mainContainer.getPort();
   }
@@ -274,6 +282,7 @@ class DevAppServerImpl implements DevAppServer {
    *
    * @see ContainerService#getAppContext
    */
+  @Override
   public AppContext getAppContext() {
     return mainContainer.getAppContext();
   }
@@ -281,6 +290,7 @@ class DevAppServerImpl implements DevAppServer {
   /**
    * Reset the container EnvironmentVariableMismatchSeverity.
    */
+  @Override
   public void setThrowOnEnvironmentVariableMismatch(boolean throwOnMismatch) {
     mainContainer.setEnvironmentVariableMismatchSeverity(throwOnMismatch ? ERROR : WARNING);
   }

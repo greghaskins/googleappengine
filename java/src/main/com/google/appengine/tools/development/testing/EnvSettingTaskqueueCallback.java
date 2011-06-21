@@ -8,6 +8,7 @@ import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.apphosting.api.ApiProxy;
 
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * An implementation of {@code LocalTaskQueueCallback} that wraps a delegate and
@@ -39,7 +40,7 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
    * ApiProxyLocal} for storing the name of the delegate class.
    */
   private static final String DELEGATE_CLASS_PROP =
-      "com.google.appengine.tools.development.testing.EnvSettingTaskqueueCallback.delegateClass";
+      EnvSettingTaskqueueCallback.class.getName() + ".delegateClass";
 
   /**
    * The name of a property used in the
@@ -48,7 +49,14 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
    * environment to the task threads.
    */
   private static final String COPY_ENVIRONMENT_PROP =
-      "com.google.appengine.tools.development.testing.EnvSettingTaskqueueCallback.copyEnvironment";
+      EnvSettingTaskqueueCallback.class.getName() + ".copyEnvironment";
+
+  /**
+   * Property name of the {@link #taskExecutionLatch} in the current
+   * environment.
+   */
+  private static final String TASK_EXECUTION_LATCH_PROP =
+      EnvSettingTaskqueueCallback.class.getName() + ".taskExecutionLatch";
 
   /**
    * A helper method invoked from {@link LocalTaskQueueTestConfig} which sets
@@ -67,9 +75,19 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
     proxy.setProperty(COPY_ENVIRONMENT_PROP, Boolean.toString(shouldCopyApiProxyEnvironment));
   }
 
+  /**
+   * A helper method invoked from {@link LocalTaskQueueTestConfig} which sets
+   * the provided latch on the current environment.
+   *
+   * @param latch the latch
+   */
+  static void setTaskExecutionLatch(CountDownLatch latch) {
+    ApiProxy.getCurrentEnvironment().getAttributes().put(TASK_EXECUTION_LATCH_PROP, latch);
+  }
+
   private LocalTaskQueueCallback delegate;
   private boolean shouldCopyEnvironment;
-  private ApiProxy.Environment environmentFromInitializingThread;
+  private ApiProxy.Environment environmentFromInitializingThread; private CountDownLatch taskExecutionLatch;
 
   /**
    * This is invoked during initialization of the {@code LocalTaskQueue}
@@ -96,6 +114,8 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
         throw new RuntimeException(Thread.currentThread().getName());
       }
     }
+    taskExecutionLatch = (CountDownLatch) ApiProxy.getCurrentEnvironment().getAttributes().get(
+        TASK_EXECUTION_LATCH_PROP);
   }
 
   /**
@@ -104,7 +124,13 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
   @Override
   public int execute(URLFetchServicePb.URLFetchRequest req) {
     ApiProxy.setEnvironmentForCurrentThread(buildNewEnvironment());
-    return delegate.execute(req);
+    try {
+      return delegate.execute(req);
+    } finally {
+      if (taskExecutionLatch != null) {
+        taskExecutionLatch.countDown();
+      }
+    }
   }
 
   private ApiProxy.Environment buildNewEnvironment() {
@@ -113,5 +139,4 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
     }
     return LocalServiceTestHelper.newDefaultTestEnvironment();
   }
-
 }

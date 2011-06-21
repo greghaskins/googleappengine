@@ -8,6 +8,8 @@ import com.google.appengine.api.channel.ChannelServicePb.CreateChannelResponse;
 import com.google.appengine.api.channel.ChannelServicePb.SendMessageRequest;
 import com.google.apphosting.api.ApiProxy;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -80,6 +82,11 @@ class ChannelServiceImpl implements ChannelService {
     }
 
     return new ChannelMessage(clientId, message);
+  }
+
+  @Override
+  public ChannelPresence parsePresence(HttpServletRequest request) throws IOException {
+    return ChannelPresenceParser.parsePresence(request);
   }
 
   private RuntimeException getExceptionForPrecondition(ErrorCode errorCode) {

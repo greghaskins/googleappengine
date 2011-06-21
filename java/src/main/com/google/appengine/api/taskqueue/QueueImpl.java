@@ -641,7 +641,8 @@ class QueueImpl implements Queue {
     for (TaskQueueQueryAndOwnTasksResponse.Task response : leaseResponse.tasks()) {
       TaskOptions options = TaskOptions.Builder.withTaskName(response.getTaskName())
                                                .etaMillis(response.getEtaUsec() / 1000)
-                                               .payload(response.getBodyAsBytes());
+                                               .payload(response.getBodyAsBytes())
+                                               .method(TaskOptions.Method.PULL);
       result.add(new TaskHandle(options, queueName, response.getRetryCount()));
     }
 
