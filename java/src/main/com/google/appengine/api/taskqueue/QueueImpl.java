@@ -12,6 +12,8 @@ import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddResponse;
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteRequest;
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteResponse;
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode;
+import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueRequest;
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueResponse;
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
@@ -447,10 +449,9 @@ class QueueImpl implements Queue {
           taskName = taskResult.getChosenTaskName();
         }
         TaskOptions taskResultOptions = new TaskOptions(options);
-        taskResultOptions.taskName(taskName)
-                         .etaMillis(addRequest.getEtaUsec() / 1000)
-                         .payload(addRequest.getBodyAsBytes());
-        tasks.add(new TaskHandle(taskResultOptions, queueName, 0));
+        taskResultOptions.taskName(taskName).payload(addRequest.getBodyAsBytes());
+        TaskHandle handle = new TaskHandle(taskResultOptions, queueName);
+        tasks.add(handle.etaUsec(addRequest.getEtaUsec()));
       } else if (taskResult.getResult() != TaskQueueServiceError.ErrorCode.SKIPPED.getValue()) {
         throw QueueApiHelper.translateError(taskResult.getResult(), "");
       }
@@ -553,7 +554,8 @@ class QueueImpl implements Queue {
   @Override
   public boolean deleteTask(String taskName) {
     TaskHandle.validateTaskName(taskName);
-    return deleteTask(new TaskHandle(taskName, this.queueName, 0));
+    return deleteTask(new TaskHandle(TaskOptions.Builder.withTaskName(taskName),
+        queueName));
   }
 
   /**
@@ -640,12 +642,52 @@ class QueueImpl implements Queue {
     List<TaskHandle> result = new ArrayList<TaskHandle>();
     for (TaskQueueQueryAndOwnTasksResponse.Task response : leaseResponse.tasks()) {
       TaskOptions options = TaskOptions.Builder.withTaskName(response.getTaskName())
-                                               .etaMillis(response.getEtaUsec() / 1000)
                                                .payload(response.getBodyAsBytes())
                                                .method(TaskOptions.Method.PULL);
-      result.add(new TaskHandle(options, queueName, response.getRetryCount()));
+      TaskHandle handle = new TaskHandle(options, queueName, response.getRetryCount());
+      result.add(handle.etaUsec(response.getEtaUsec()));
     }
 
     return result;
+  }
+
+  /**
+   * See {@link Queue#modifyTaskLease(TaskHandle, long, TimeUnit)}.
+   */
+  @Override
+  public TaskHandle modifyTaskLease(TaskHandle taskHandle, long lease, TimeUnit unit) {
+    long leaseMillis = unit.toMillis(lease);
+    if (leaseMillis > QueueConstants.maxLease(TimeUnit.MILLISECONDS)) {
+      throw new IllegalArgumentException(
+          String.format("The lease time specified (%s seconds) is too large. " +
+              "Lease period can be no longer than %d seconds.",
+              formatLeaseTimeInSeconds(leaseMillis),
+              QueueConstants.maxLease(TimeUnit.SECONDS)));
+    }
+    if (leaseMillis < 0) {
+      throw new IllegalArgumentException(
+        String.format("The lease time must not be negative. " +
+          "Specified lease time was %s seconds.",
+          formatLeaseTimeInSeconds(leaseMillis)));
+    }
+
+    TaskQueueModifyTaskLeaseRequest request = new TaskQueueModifyTaskLeaseRequest();
+    TaskQueueModifyTaskLeaseResponse response = new TaskQueueModifyTaskLeaseResponse();
+
+    request.setQueueName(this.queueName);
+    request.setTaskName(taskHandle.getName());
+    request.setLeaseSeconds(leaseMillis / 1000.0);
+    request.setEtaUsec(taskHandle.getEtaUsec());
+
+    apiHelper.makeSyncCall("ModifyTaskLease", request, response);
+    taskHandle.etaUsec(response.getUpdatedEtaUsec());
+    return taskHandle;
+  }
+
+  private String formatLeaseTimeInSeconds(long milliSeconds) {
+    long seconds = TimeUnit.SECONDS.convert(milliSeconds, TimeUnit.MILLISECONDS);
+    long remainder = milliSeconds - TimeUnit.MILLISECONDS.convert(seconds, TimeUnit.SECONDS);
+    String formatString = milliSeconds < 0 ? "-%01d.%03d" : "%01d.%03d";
+    return String.format(formatString, Math.abs(seconds), Math.abs(remainder));
   }
 }

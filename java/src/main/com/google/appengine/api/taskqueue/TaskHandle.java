@@ -21,6 +21,7 @@ public final class TaskHandle implements Serializable {
   private static final long serialVersionUID = -2578988193753847512L;
   private String taskName;
   private String queueName;
+  private long etaUsec;
   private long etaMillis;
   private Integer retryCount;
   private TaskOptions options;
@@ -32,13 +33,18 @@ public final class TaskHandle implements Serializable {
     this.retryCount = retryCount;
     this.taskName = null;
     this.etaMillis = 0;
-    this.options = options;
+    this.options = new TaskOptions(options);
+    setEtaUsecFromOptions(this.options);
   }
 
-  TaskHandle(TaskOptions options, String queueName) {
+  public TaskHandle(TaskOptions options, String queueName) {
     this(options, queueName, 0);
   }
 
+  /**
+   * @deprecated Use {@link TaskHandle#TaskHandle(TaskOptions, String)
+   */
+  @Deprecated
   public TaskHandle(String name, String queueName, long etaMillis) {
     this(TaskOptions.Builder.withTaskName(name).etaMillis(etaMillis),
          queueName, null);
@@ -46,10 +52,13 @@ public final class TaskHandle implements Serializable {
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
-    if (this.options == null) {
-      this.options = TaskOptions.Builder.withTaskName(taskName).etaMillis(etaMillis);
-      this.taskName = null;
-      this.etaMillis = 0;
+    if (options == null) {
+      options = TaskOptions.Builder.withTaskName(taskName).etaMillis(etaMillis);
+      taskName = null;
+      etaMillis = 0;
+    }
+    if (etaUsec == 0 && options.getEtaMillis() != null) {
+      setEtaUsecFromOptions(options);
     }
   }
 
@@ -59,6 +68,7 @@ public final class TaskHandle implements Serializable {
     int result = options.hashCode();
     result = result * prime + queueName.hashCode();
     result = result * prime + (retryCount == null ? 0 : retryCount.intValue());
+    result = result * prime + (int) (etaUsec ^ (etaUsec >>> 32));
     return result;
   }
 
@@ -77,13 +87,17 @@ public final class TaskHandle implements Serializable {
     if (retryCount == null) {
       if (other.retryCount != null) return false;
     } else if (!retryCount.equals(other.retryCount)) return false;
+    if (etaUsec != other.etaUsec) {
+      return false;
+    }
     return true;
   }
 
   @Override
   public String toString() {
     return "TaskHandle[options=" + options.toString() + "queueName=" + queueName
-           + ", retryCount=" + retryCount + "]";
+           + ", retryCount=" + retryCount + ", etaMillis = " + etaMillis
+           + ", etaUsec = " + etaUsec + "]";
   }
 
   /**
@@ -124,6 +138,36 @@ public final class TaskHandle implements Serializable {
   }
 
   /**
+   * Set the time comparable to {@link System#currentTimeMillis()} when
+   * this task is scheduled for execution. For pull tasks this value specifies
+   * the lease expiration time.
+   */
+  void etaMillis(long etaMillis) {
+    options.etaMillis(etaMillis);
+    etaUsec = etaMillis * 1000;
+  }
+
+  /**
+   * Returns the time when the task is scheduled for execution to microsecond
+   * precision. For pull tasks this value specifies the lease expiration time.
+   * Microsecond precision is required for the lease verification check when
+   * modifying the task lease.
+   */
+  long getEtaUsec() {
+    return etaUsec;
+  }
+
+  /**
+   * Set the time for when this task is scheduled for execution to microsecond
+   * precision. For pull tasks this value specifies the lease expiraion time.
+   */
+  TaskHandle etaUsec(long etaUsec) {
+    this.etaUsec = etaUsec;
+    options.etaMillis(etaUsec / 1000);
+    return this;
+  }
+
+  /**
    * Returns number of leases that had been performed on this task.
    * Can return {@code null}.
    */
@@ -137,6 +181,14 @@ public final class TaskHandle implements Serializable {
    */
   public byte[] getPayload() {
     return options.getPayload();
+  }
+
+  private void setEtaUsecFromOptions(TaskOptions options) {
+    if (options != null && options.getEtaMillis() != null) {
+      etaUsec = options.getEtaMillis() * 1000;
+    } else {
+      etaUsec = 0;
+    }
   }
 
   static final class KeyValuePair implements Map.Entry<String, String> {

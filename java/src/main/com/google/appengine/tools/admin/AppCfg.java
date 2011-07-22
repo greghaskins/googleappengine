@@ -310,6 +310,7 @@ public class AppCfg {
         + "  backends start: Start the specified backend.\n"
         + "  backends stop: Stop the specified backend.\n"
         + "  backends delete: Delete the specified backend.\n"
+        + "  backends configure: Configure the specified backend.\n"
         + "Use 'help <action>' for a detailed description.\n" + "\n" + "options:\n"
         + "  -h, --help            Show the help message and exit.\n"
         + GENERAL_OPTION_HELP
@@ -516,6 +517,7 @@ public class AppCfg {
       new BackendsStartAction(),
       new BackendsStopAction(),
       new BackendsDeleteAction(),
+      new BackendsConfigureAction(),
       new BackendsAction()
   );
 
@@ -1022,6 +1024,36 @@ public class AppCfg {
     }
   }
 
+  class BackendsConfigureAction extends AppCfgAction {
+    private String backendName;
+
+    BackendsConfigureAction() {
+      super("backends", "configure");
+    }
+
+    @Override
+    public void apply() {
+      super.apply();
+      if (getArgs().size() != 2) {
+        throw new IllegalArgumentException("Expected the backend name");
+      }
+      backendName = getArgs().get(1);
+    }
+    @Override
+    public void execute() {
+      admin.configureBackend(backendName);
+    }
+
+    @Override
+    public String getHelpString() {
+      return "AppCfg [options] backends configure <app-dir> <backend>\n\n" +
+          "Updates the configuration of the backend with the specified name, without " +
+          "stopping instances that are currently running.  Only valid for certain " +
+          "settings (instances, options: failfast, options: public).\n\n" +
+          "Options:\n" + GENERAL_OPTION_HELP;
+    }
+  }
+
   /**
    * This is a catchall for the case where the user enters "appcfg.sh
    * backends app-dir sub-command" rather than "appcfg.sh backends
@@ -1069,7 +1101,8 @@ public class AppCfg {
           + "AppCfg [options] backends rollback: Roll back a previously in-progress update.\n"
           + "AppCfg [options] backends start: Start the specified backend.\n"
           + "AppCfg [options] backends stop: Stop the specified backend.\n"
-          + "AppCfg [options] backends delete: Delete the specified backend.\n";
+          + "AppCfg [options] backends delete: Delete the specified backend.\n"
+          + "AppCfg [options] backends configure: Configure the specified backend.\n";
     }
   }
 

@@ -9,6 +9,8 @@ import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 /**
  * Concrete implementation of QueryResultsSource which knows how to
@@ -17,7 +19,13 @@ import java.util.concurrent.Future;
  *
  */
 class QueryResultsSourceImpl implements QueryResultsSource {
+  static Logger logger = Logger.getLogger(QueryResultsSourceImpl.class.getName());
   private static final int AT_LEAST_ONE = -1;
+  private static final String DISABLE_CHUNK_SIZE_WARNING_SYS_PROP =
+      "appengine.datastore.disableChunkSizeWarning";
+  private static final int CHUNK_SIZE_WARNING_RESULT_SET_SIZE_THRESHOLD = 1000;
+  private static final long MAX_CHUNK_SIZE_WARNING_FREQUENCY_MS = 1000 * 60 * 5;
+  static final AtomicLong lastChunkSizeWarning = new AtomicLong(0);
 
   private final ApiConfig apiConfig;
   private final int chunkSize;
@@ -26,6 +34,7 @@ class QueryResultsSourceImpl implements QueryResultsSource {
 
   private Future<QueryResult> nextResult;
   private int skippedResults;
+  private int totalResults = 0;
 
   public QueryResultsSourceImpl(ApiConfig apiConfig, FetchOptions fetchOptions, Transaction txn,
       Future<QueryResult> firstResult) {
@@ -140,6 +149,25 @@ class QueryResultsSourceImpl implements QueryResultsSource {
     for (EntityProto entityProto : res.results()) {
       buffer.add(EntityTranslator.createFromPb(entityProto));
     }
+    totalResults += res.resultSize();
+    if (chunkSize == AT_LEAST_ONE && totalResults > CHUNK_SIZE_WARNING_RESULT_SET_SIZE_THRESHOLD &&
+        System.getProperty(DISABLE_CHUNK_SIZE_WARNING_SYS_PROP) == null) {
+      logChunkSizeWarning();
+    }
   }
 
+  void logChunkSizeWarning() {
+    long now = System.currentTimeMillis();
+    if ((now - lastChunkSizeWarning.get()) < MAX_CHUNK_SIZE_WARNING_FREQUENCY_MS) {
+      return;
+    }
+    logger.warning(
+        "This query does not have a chunk size set in FetchOptions and has returned over " +
+            CHUNK_SIZE_WARNING_RESULT_SET_SIZE_THRESHOLD + " results.  If result sets of this "
+            + "size are common for this query, consider setting a chunk size to improve "
+            + "performance.\n  To disable this warning set the following system property in "
+            + "appengine-web.xml (the value of the property doesn't matter): '"
+            + DISABLE_CHUNK_SIZE_WARNING_SYS_PROP + "'");
+    lastChunkSizeWarning.set(now);
+  }
 }

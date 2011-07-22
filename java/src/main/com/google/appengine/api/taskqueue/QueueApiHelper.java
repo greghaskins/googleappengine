@@ -80,6 +80,12 @@ class QueueApiHelper {
       case INVALID_QUEUE_MODE:
         return new InvalidQueueModeException(
             "Target queue mode does not support this operation : " + detail);
+      case TASK_LEASE_EXPIRED:
+        return new IllegalStateException(
+            "The task lease has expired : " + detail);
+      case QUEUE_PAUSED:
+        return new IllegalStateException(
+            "The queue is paused and cannot process the request : " + detail);
       default:
         return new QueueFailureException("Unspecified error (" + errorCode + ") : " + detail);
     }

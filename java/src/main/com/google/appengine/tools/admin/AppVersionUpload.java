@@ -356,7 +356,7 @@ public class AppVersionUpload {
 
     AppYamlTranslator translator =
         new AppYamlTranslator(app.getAppEngineWebXml(), app.getWebXml(), app.getBackendsXml(),
-                              app.getApiVersion(), staticFiles);
+                              app.getApiVersion(), staticFiles, null);
     String yaml = translator.getYaml();
     logger.fine("Generated app.yaml file:\n" + yaml);
     return yaml;

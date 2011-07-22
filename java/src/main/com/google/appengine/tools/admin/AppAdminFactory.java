@@ -42,6 +42,14 @@ public class AppAdminFactory {
     return new AppAdminImpl(options, app, errorWriter, appOptions, appVersionUploadClass);
   }
 
+  public ApplicationProcessingOptions getAppOptions() {
+    return appOptions;
+  }
+
+  public Class<? extends AppVersionUpload> getAppVersionUploadClass() {
+    return appVersionUploadClass;
+  }
+
   /**
    * Sets the class used for uploading the application to the server. Should
    * only be used for advanced customization of the upload process.

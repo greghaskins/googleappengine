@@ -4,6 +4,8 @@ package com.google.appengine.tools.remoteapi;
 
 import com.google.appengine.api.users.dev.LoginCookieUtils;
 import com.google.apphosting.api.ApiProxy;
+import com.google.apphosting.api.ApiProxy.Delegate;
+import com.google.apphosting.api.ApiProxy.Environment;
 
 import org.apache.commons.httpclient.Cookie;
 
@@ -19,47 +21,45 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Installs and uninstalls the remote API. While the RemoteApi is installed,
- * all App Engine calls will be sent to a remote server.
+ * all App Engine calls made by the same thread that performed the installation
+ * will be sent to a remote server.
  *
- * <p>This class is intended to be used on a single thread.</p>
+ * <p>Instances of this class can only be used on a single thread.</p>
  *
  */
 public class RemoteApiInstaller {
   private static final Pattern PAIR_REGEXP = Pattern.compile("([a-z0-9_-]+): +([~a-z0-9_-]+)");
 
-  private static final ConsoleHandler REMOTE_METHOD_HANDLER = new ConsoleHandler();
-  static {
-    REMOTE_METHOD_HANDLER.setFormatter(new Formatter() {
-      @Override
-      public String format(LogRecord record) {
-        return record.getMessage() + "\n";
-      }
-    }) ;
-    REMOTE_METHOD_HANDLER.setLevel(Level.FINE);
+  private static ConsoleHandler remoteMethodHandler;
+
+  private static synchronized StreamHandler getStreamHandler() {
+    if (remoteMethodHandler == null) {
+      remoteMethodHandler = new ConsoleHandler();
+      remoteMethodHandler.setFormatter(new Formatter() {
+        @Override
+        public String format(LogRecord record) {
+          return record.getMessage() + "\n";
+        }
+      }) ;
+      remoteMethodHandler.setLevel(Level.FINE);
+    }
+    return remoteMethodHandler;
   }
 
-  private AppEngineClient installedClient;
-
-  private RemoteApiDelegate installedDelegate;
-  private ApiProxy.Delegate savedDelegate;
-
-  private ApiProxy.Environment installedEnv;
-  private ApiProxy.Environment savedEnv;
-
-  private boolean needUninstall;
+  private InstallerState installerState;
 
   /**
    * Installs the remote API using the provided options.  Logs into the remote
    * application using the credentials available via these options.
    *
-   * <p>Warning: not thread-safe. This method may be used only on a single
-   * thread, and all App Engine API calls must be made on the same thread.
-   * (This restriction may be lifted in a future release.)</p>
+   * <p>Warning: This method only installs the remote API on the current
+   * thread.  Do not share this instance across threads!</p>
    *
    * @throws IllegalArgumentException if the server or credentials weren't provided.
    * @throws IllegalStateException if already installed
@@ -74,21 +74,58 @@ public class RemoteApiInstaller {
     if (options.getUserEmail() == null) {
       throw new IllegalArgumentException("credentials not set in options");
     }
-    if (needUninstall) {
-      throw new IllegalStateException("remote API is already installed");
+
+    synchronized (getClass()) {
+      if (installerState != null) {
+        throw new IllegalStateException("remote API is already installed");
+      }
+      @SuppressWarnings("unchecked")
+      Delegate<Environment> originalDelegate = ApiProxy.getDelegate();
+      Environment originalEnv = ApiProxy.getCurrentEnvironment();
+      AppEngineClient installedClient = login(options);
+      RemoteApiDelegate remoteApiDelegate =
+          createDelegate(options, installedClient, originalDelegate);
+      if (originalDelegate instanceof ThreadLocalDelegate) {
+        ThreadLocalDelegate<Environment> installedDelegate =
+            (ThreadLocalDelegate<Environment>) originalDelegate;
+        if (installedDelegate.getDelegateForThread() != null) {
+          throw new IllegalStateException("remote API is already installed");
+        }
+        installedDelegate.setDelegateForThread(remoteApiDelegate);
+      } else {
+        ApiProxy.setDelegate(new ThreadLocalDelegate<Environment>(
+            originalDelegate, remoteApiDelegate));
+      }
+      Environment installedEnv = null;
+      if (originalEnv == null) {
+        installedEnv = createEnv(options, installedClient);
+        ApiProxy.setEnvironmentForCurrentThread(installedEnv);
+      }
+      installerState = new InstallerState(
+          originalEnv,
+          installedClient,
+          remoteApiDelegate,
+          installedEnv);
     }
-    savedDelegate = ApiProxy.getDelegate();
-    savedEnv = ApiProxy.getCurrentEnvironment();
-    needUninstall = true;
-
-    installedClient = login(options);
-    installedDelegate = createDelegate(options, installedClient, savedDelegate);
-    installedEnv = createEnv(options, installedClient);
-
-    ApiProxy.setDelegate(installedDelegate);
-    ApiProxy.setEnvironmentForCurrentThread(installedEnv);
   }
 
+  /**
+   * The state related to the installation of a {@link RemoteApiInstaller}.
+   * It's just a struct, but it makes it easy for us to ensure that we don't
+   * end up in an inconsistent state when installation fails part-way through.
+   */
+  private static class InstallerState { private final Environment savedEnv;
+    private final AppEngineClient installedClient;
+    private final RemoteApiDelegate remoteApiDelegate; private final Environment installedEnv;
+
+    InstallerState(Environment savedEnv, AppEngineClient installedClient,
+        RemoteApiDelegate remoteApiDelegate, Environment installedEnv) {
+      this.savedEnv = savedEnv;
+      this.installedClient = installedClient;
+      this.remoteApiDelegate = remoteApiDelegate;
+      this.installedEnv = installedEnv;
+    }
+  }
   /**
    * Uninstalls the remote API. If any async calls are in progress, waits for
    * them to finish.
@@ -96,26 +133,30 @@ public class RemoteApiInstaller {
    * <p>If the remote API isn't installed, this method has no effect.</p>
    */
   public void uninstall() {
-    if (needUninstall) {
-      if (installedDelegate != ApiProxy.getDelegate()) {
-        throw new IllegalStateException(
-            "Can't uninstall because the current delegate has been modified.");
+    synchronized (getClass()) {
+      if (installerState == null) {
+        throw new IllegalArgumentException("remote API is already uninstalled");
       }
-      if (installedEnv != ApiProxy.getCurrentEnvironment()) {
+      if (installerState.installedEnv != null &&
+          installerState.installedEnv != ApiProxy.getCurrentEnvironment()) {
         throw new IllegalStateException(
           "Can't uninstall because the current environment has been modified.");
       }
-      ApiProxy.setDelegate(savedDelegate);
-      ApiProxy.setEnvironmentForCurrentThread(savedEnv);
-      needUninstall = false;
-      savedDelegate = null;
-      savedEnv = null;
-
-      installedDelegate.shutdown();
-
-      installedDelegate = null;
-      installedEnv = null;
-      installedClient = null;
+      ApiProxy.Delegate currentDelegate = ApiProxy.getDelegate();
+      if (!(currentDelegate instanceof ThreadLocalDelegate)) {
+        throw new IllegalStateException(
+            "Can't uninstall because the current delegate has been modified.");
+      }
+      ThreadLocalDelegate tld = (ThreadLocalDelegate) currentDelegate;
+      if (tld.getDelegateForThread() == null) {
+        throw new IllegalArgumentException("remote API is already uninstalled");
+      }
+      tld.clearThreadDelegate();
+      if (installerState.installedEnv != null) {
+        ApiProxy.setEnvironmentForCurrentThread(installerState.savedEnv);
+      }
+      installerState.remoteApiDelegate.shutdown();
+      installerState = null;
     }
   }
 
@@ -131,7 +172,7 @@ public class RemoteApiInstaller {
    * allows admin access to the app as the current user.</p>
    */
   public String serializeCredentials() {
-    return installedClient.serializeCredentials();
+    return installerState.installedClient.serializeCredentials();
   }
 
   /**
@@ -140,13 +181,13 @@ public class RemoteApiInstaller {
   public void logMethodCalls() {
     Logger logger = Logger.getLogger(RemoteApiDelegate.class.getName());
     logger.setLevel(Level.FINE);
-    if (!Arrays.asList(logger.getHandlers()).contains(REMOTE_METHOD_HANDLER)) {
-      logger.addHandler(REMOTE_METHOD_HANDLER);
+    if (!Arrays.asList(logger.getHandlers()).contains(getStreamHandler())) {
+      logger.addHandler(getStreamHandler());
     }
   }
 
   public void resetRpcCount() {
-    installedDelegate.resetRpcCount();
+    installerState.remoteApiDelegate.resetRpcCount();
   }
 
   /**
@@ -154,18 +195,18 @@ public class RemoteApiInstaller {
    * or {@link #resetRpcCount} was called.
    */
   public int getRpcCount() {
-    return installedDelegate.getRpcCount();
+    return installerState.remoteApiDelegate.getRpcCount();
   }
 
   protected AppEngineClient login(RemoteApiOptions options) throws IOException {
     return loginImpl(options);
   }
 
-  protected RemoteApiDelegate createDelegate(RemoteApiOptions options, AppEngineClient client, ApiProxy.Delegate originalDelegate) {
-    return new RemoteApiDelegate(new RemoteRpc(client), options, originalDelegate);
+  protected RemoteApiDelegate createDelegate(RemoteApiOptions options, AppEngineClient client, Delegate<Environment> originalDelegate) {
+    return RemoteApiDelegate.newInstance(new RemoteRpc(client), options, originalDelegate);
   }
 
-  protected ApiProxy.Environment createEnv(RemoteApiOptions options, AppEngineClient client) {
+  protected Environment createEnv(RemoteApiOptions options, AppEngineClient client) {
     return new ToolEnvironment(client.getAppId(), options.getUserEmail());
   }
 
@@ -178,20 +219,42 @@ public class RemoteApiInstaller {
    */
   private AppEngineClient loginImpl(RemoteApiOptions options) throws IOException {
     List<Cookie> authCookies;
-    if (options.getCredentialsToReuse() != null) {
+    if (!authenticationRequiresCookies(options)) {
+      authCookies = Collections.emptyList();
+    } else if (options.getCredentialsToReuse() != null) {
       authCookies = parseSerializedCredentials(options.getUserEmail(), options.getHostname(),
           options.getCredentialsToReuse());
     } else if (options.getHostname().equals("localhost")) {
       authCookies = Collections.singletonList(
           makeDevAppServerCookie(options.getHostname(), options.getUserEmail()));
+    } else if (ApiProxy.getCurrentEnvironment() != null) {
+      authCookies = new HostedClientLogin().login(
+          options.getHostname(), options.getUserEmail(), options.getPassword());
     } else {
-      authCookies =
-          ClientLogin.login(options.getHostname(), options.getUserEmail(), options.getPassword());
+      authCookies = new StandaloneClientLogin().login(
+          options.getHostname(), options.getUserEmail(), options.getPassword());
     }
 
     String appId = getAppIdFromServer(authCookies, options);
-    return AppEngineClient.newInstance(options, authCookies, appId);
+    return createAppEngineClient(options, authCookies, appId);
   }
+
+  /**
+   * @return {@code true} if the authentication to support the {@link RemoteApiOptions} requires
+   *         cookies, {@code false} otherwise
+   */
+  boolean authenticationRequiresCookies(final RemoteApiOptions options) {
+    return true;
+  }
+
+  AppEngineClient createAppEngineClient(RemoteApiOptions options,
+      List<Cookie> authCookies, String appId) {
+    if (ApiProxy.getCurrentEnvironment() != null) {
+      return new HostedAppEngineClient(options, authCookies, appId);
+    }
+    return new StandaloneAppEngineClient(options, authCookies, appId);
+  }
+
   public static Cookie makeDevAppServerCookie(String hostname, String email) {
     String cookieValue = email + ":true:" + LoginCookieUtils.encodeEmailAsUserId(email);
     Cookie cookie = new Cookie(hostname, LoginCookieUtils.COOKIE_NAME, cookieValue);
@@ -199,9 +262,9 @@ public class RemoteApiInstaller {
     return cookie;
   }
 
-  private String getAppIdFromServer(List<Cookie> authCookies, RemoteApiOptions options)
+  String getAppIdFromServer(List<Cookie> authCookies, RemoteApiOptions options)
       throws IOException {
-    AppEngineClient tempClient = AppEngineClient.newInstance(options, authCookies, null);
+    AppEngineClient tempClient = createAppEngineClient(options, authCookies, null);
     AppEngineClient.Response response = tempClient.get(options.getRemoteApiPath());
     int status = response.getStatusCode();
     if (status != 200) {

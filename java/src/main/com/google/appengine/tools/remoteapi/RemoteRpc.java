@@ -2,13 +2,13 @@
 
 package com.google.appengine.tools.remoteapi;
 
-import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.util.ConcurrentModificationException;
 import java.util.logging.Logger;
 
 /**
@@ -43,8 +43,17 @@ class RemoteRpc {
         logger.fine("remote API call: failed due to a server-side Java exception");
         Object contents = parseJavaException(responseProto,
             requestProto.getServiceName(), requestProto.getMethod());
-        if (contents instanceof RuntimeException) {
-          throw (RuntimeException) contents;
+        if (contents instanceof ConcurrentModificationException) {
+          ConcurrentModificationException serverSide = (ConcurrentModificationException) contents;
+          ConcurrentModificationException clientSide =
+              new ConcurrentModificationException(serverSide.getMessage());
+          clientSide.initCause(serverSide);
+          throw clientSide;
+        } else if (contents instanceof IllegalArgumentException) {
+          IllegalArgumentException serverSide = (IllegalArgumentException) contents;
+          throw new IllegalArgumentException(serverSide.getMessage(), serverSide);
+        } else if (contents instanceof RuntimeException) {
+            throw (RuntimeException) contents;
         } else if (contents instanceof Throwable) {
           throw new RemoteApiException("response was an exception",
               requestProto.getServiceName(), requestProto.getMethod(), (Throwable) contents);
@@ -116,11 +125,11 @@ class RemoteRpc {
       ObjectInputStream in = new ObjectInputStream(ins);
       return in.readObject();
     } catch (IOException e) {
-      throw (ApiProxy.ApiProxyException) new RemoteApiException(
+      throw new RemoteApiException(
           "remote API call: " + "can't deserialize server-side exception", packageName, methodName,
           e);
     } catch (ClassNotFoundException e) {
-      throw (ApiProxy.ApiProxyException) new RemoteApiException(
+      throw new RemoteApiException(
           "remote API call: " + "can't deserialize server-side exception", packageName, methodName,
           e);
     }
@@ -131,5 +140,9 @@ class RemoteRpc {
     logger.fine("remote API call: " + message);
     return new RemoteApiException("remote API call: " + message,
         request.getServiceName(), request.getMethod(), cause);
+  }
+
+  AppEngineClient getClient() {
+    return client;
   }
 }

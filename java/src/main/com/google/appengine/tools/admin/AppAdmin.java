@@ -186,6 +186,11 @@ public interface AppAdmin {
   void deleteBackend(String backendName);
 
   /**
+   * Reconfigure the backend with the specified name.
+   */
+  void configureBackend(String backendName);
+
+  /**
    * The severity levels for App Engine application logging.
    */
   public enum LogSeverity {

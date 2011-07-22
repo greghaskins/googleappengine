@@ -43,6 +43,25 @@ public final class DatastoreServiceConfig {
    */
   static final int DEFAULT_MAX_BATCH_WRITE_ENTITIES = 500;
 
+  /**
+   * Name of a system property that users can specify to control the default
+   * max entity groups per rpc.
+   */
+  static final String DEFAULT_MAX_ENTITY_GROUPS_PER_RPC_SYS_PROP =
+      "appengine.datastore.defaultMaxEntityGroupsPerRpc";
+
+  /**
+   * The default number of max entity groups per rpc.  Can be null.
+   */ static final Integer DEFAULT_MAX_ENTITY_GROUPS_PER_RPC =
+      getDefaultMaxEntityGroupsPerRpc();
+
+  static Integer getDefaultMaxEntityGroupsPerRpc() {
+    String defaultMaxEntityGroupsPerRpc =
+        System.getProperty(DEFAULT_MAX_ENTITY_GROUPS_PER_RPC_SYS_PROP);
+    return defaultMaxEntityGroupsPerRpc == null ? null :
+        Integer.parseInt(defaultMaxEntityGroupsPerRpc);
+  }
+
   private ImplicitTransactionManagementPolicy implicitTransactionManagementPolicy =
       ImplicitTransactionManagementPolicy.NONE;
 
@@ -52,7 +71,7 @@ public final class DatastoreServiceConfig {
 
   private int maxRpcSizeBytes = DEFAULT_RPC_SIZE_LIMIT_BYTES;
   private int maxBatchWriteEntities = DEFAULT_MAX_BATCH_WRITE_ENTITIES;
-  private int maxBatchReadEntities = DEFAULT_MAX_BATCH_GET_KEYS; private Integer maxEntityGroupsPerRpc;
+  private int maxBatchReadEntities = DEFAULT_MAX_BATCH_GET_KEYS; private Integer maxEntityGroupsPerRpc = DEFAULT_MAX_ENTITY_GROUPS_PER_RPC;
 
   /**
    * Cannot be directly instantiated, use {@link Builder} instead.
@@ -259,8 +278,10 @@ public final class DatastoreServiceConfig {
     }
 
     /**
-     * Create a {@link DatastoreServiceConfig} with the given deadline
+     * Create a {@link DatastoreServiceConfig} with the given deadline, in
+     * seconds.
      * @param deadline the deadline to set.
+     * @throws IllegalArgumentException if deadline is not positive
      * @return The newly created DatastoreServiceConfig instance.
      */
     public static DatastoreServiceConfig withDeadline(double deadline) {

@@ -4,6 +4,7 @@ package com.google.appengine.api.mail;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.appengine.api.mail.MailServicePb.MailAttachment;
+import com.google.appengine.api.mail.MailServicePb.MailHeader;
 import com.google.appengine.api.mail.MailServicePb.MailMessage;
 import com.google.appengine.api.mail.MailServicePb.MailServiceError.ErrorCode;
 
@@ -78,6 +79,14 @@ class MailServiceImpl implements MailService {
         msgProto.addAttachment(attachProto);
       }
     }
+    if (message.getHeaders() != null) {
+      for (Header header : message.getHeaders()) {
+        MailHeader headerProto = new MailHeader();
+        headerProto.setName(header.getName());
+        headerProto.setValue(header.getValue());
+        msgProto.addHeader(headerProto);
+      }
+    }
 
     byte[] msgBytes = msgProto.toByteArray();
     try {
@@ -96,6 +105,9 @@ class MailServiceImpl implements MailService {
                                              ex.getErrorDetail());
         case INVALID_ATTACHMENT_TYPE:
           throw new IllegalArgumentException("Invalid Attachment Type: " +
+                                             ex.getErrorDetail());
+        case INVALID_HEADER_NAME:
+          throw new IllegalArgumentException("Invalid Header Name: " +
                                              ex.getErrorDetail());
         case INTERNAL_ERROR:
         default:

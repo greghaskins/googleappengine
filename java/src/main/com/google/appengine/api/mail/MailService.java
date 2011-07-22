@@ -60,6 +60,49 @@ public interface MailService {
     }
   }
 
+  public class Header {
+    private final String name;
+    private final String value;
+
+    /**
+     * Headers are an optional part of messages, but if present, all
+     * information about them must be provided.
+     *
+     * @param name The name of the header. It must be present and white-listed.
+     *
+     * @param value The value of the header. It must be present, and it's
+     * content cannot be of zero length.
+     *
+     * @throws IllegalArgumentException if either name or data are missing.
+     */
+    public Header(String name, String value) {
+      if (name == null || value == null ||
+          name.length() == 0 || value.length() == 0) {
+        throw new IllegalArgumentException("Header needs name and value");
+      }
+      this.name = name;
+      this.value = value;
+    }
+
+    /**
+     * Gets the name of this header.
+     *
+     * @return The name of this header.
+     */
+    public String getName() {
+      return name;
+    }
+
+    /**
+     * Gets the value of this header.
+     *
+     * @return The value of this header.
+     */
+    public String getValue() {
+      return value;
+    }
+  }
+
   /**
    * Messages are prepared by the caller, and then submitted to the Mail service
    * for sending. Different fields are subject to different constraints, as
@@ -75,6 +118,7 @@ public interface MailService {
     private String textBody;
     private String htmlBody;
     private Collection<MailService.Attachment> attachments;
+    private Collection<MailService.Header> headers;
 
     public Message() {}
 
@@ -302,6 +346,33 @@ public interface MailService {
      */
     public void setAttachments(MailService.Attachment... attachments) {
       this.attachments = Arrays.asList(attachments);
+    }
+
+    /**
+     * Gets the headers of this message.
+     *
+     * @return A collection containing the headers of this message.
+     */
+    public Collection<MailService.Header> getHeaders() {
+      return headers;
+    }
+
+    /**
+     * Sets the headers of this message. {@code headers} may be {@code null},
+     * otherwise each header name must be one of the white-listed names.
+     * @param headers A collection of headers.
+     */
+    public void setHeaders(Collection<MailService.Header> headers) {
+      this.headers = headers;
+    }
+
+    /**
+     * Sets the headers of this message. {@code headers} may be {@code null},
+     * otherwise each header name must be one of the white-listed names.
+     * @param headers A collection of headers.
+     */
+    public void setHeaders(MailService.Header... headers) {
+      this.headers = Arrays.asList(headers);
     }
   }
 

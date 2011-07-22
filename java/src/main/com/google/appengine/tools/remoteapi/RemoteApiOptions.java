@@ -26,7 +26,7 @@ package com.google.appengine.tools.remoteapi;
  * </p>
  *
  */
-public final class RemoteApiOptions {
+public class RemoteApiOptions {
 
   private String hostname;
   private int port;
@@ -37,7 +37,6 @@ public final class RemoteApiOptions {
   private int maxConcurrentRequests = 5;
   private int datastoreQueryFetchSize = 500;
   private int maxHttpResponseSize = 33 * 1024 * 1024;
-  private boolean appEngineContainer = false;
 
   public RemoteApiOptions() {}
 
@@ -51,7 +50,6 @@ public final class RemoteApiOptions {
     this.maxConcurrentRequests = original.maxConcurrentRequests;
     this.datastoreQueryFetchSize = original.datastoreQueryFetchSize;
     this.maxHttpResponseSize = original.maxHttpResponseSize;
-    this.appEngineContainer = original.appEngineContainer;
   }
 
   /**
@@ -132,22 +130,6 @@ public final class RemoteApiOptions {
     return this;
   }
 
-  /**
-   * Set this to {@code true} in order to use the Remote API from within App
-   * Engine.  All API calls except those initiated by the
-   * {@link com.google.appengine.api.urlfetch.URLFetchService} will be sent via
-   * the URLFetchService to a remote App Engine app for execution.  API calls
-   * initiated by the URLFetchService will be executed locally.
-   * <p>
-   * Set this to {@code false} in order to use the Remote API outside of App
-   * Engine.  All API calls will be sent via sockets to a remote App Engine app
-   * for execution.  This is the default behavior.
-   */
-  public RemoteApiOptions appEngineContainer(boolean appEngineContainer) {
-    this.appEngineContainer = appEngineContainer;
-    return this;
-  }
-
   public RemoteApiOptions copy() {
     return new RemoteApiOptions(this);
   }
@@ -186,9 +168,5 @@ public final class RemoteApiOptions {
 
   public int getMaxHttpResponseSize() {
     return maxHttpResponseSize;
-  }
-
-  public boolean isAppEngineContainer() {
-    return appEngineContainer;
   }
 }

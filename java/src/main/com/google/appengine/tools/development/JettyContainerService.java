@@ -42,7 +42,7 @@ public class JettyContainerService extends AbstractContainerService {
   public final static String WEB_DEFAULTS_XML =
       "com/google/appengine/tools/development/webdefault.xml";
 
-  private static final int MAX_SIMULTANEOUS_API_CALLS = 10;
+  private static final int MAX_SIMULTANEOUS_API_CALLS = 100;
 
   /**
    * Specify which {@link Configuration} objects should be invoked when

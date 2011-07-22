@@ -188,7 +188,7 @@ public interface Queue {
    * having the earliest eta such that eta is prior to the time at which the lease is requested.
    * It is guaranteed that the leased tasks will be unavailable for lease to others in the
    * lease period. You must call deleteTask to prevent the task from being leased again after
-   * the lease period.. This method supports leasing a maximum of 1000 tasks for no more than one
+   * the lease period. This method supports leasing a maximum of 1000 tasks for no more than one
    * week.
    * @param lease Number of {@code unit}s in the lease period
    * @param unit Time unit of the lease period
@@ -213,4 +213,21 @@ public interface Queue {
    * @throws InternalFailureException
    */
   void purge();
+
+  /**
+   * Modify the lease of the specified task in this {@link Queue} for a period of time specified
+   * by {@code lease} and {@code unit}. A lease time of 0 will relinquish the lease on the
+   * task and make it avaible to be leased by calling {@link leaseTasks}.
+   * @param taskHandle handle of the task that is having its lease modified.
+   * @param lease Number of {@code unit}s in the lease period.
+   * @param unit Time unit of the lease period.
+   * @return Updated {@link TaskHandle} with the new lease period.
+   * @throws InvalidQueueModeException if the target queue is not in pull mode.
+   * @throws IllegalArgumentException if lease < 0 or too large.
+   * @throws InternalFailureException
+   * @throws IllegalStateException If the queue does not exist, or the task lease has expired
+   *         or the queue has been paused.
+   * @throws TransientFailureException Attempting the request after this exception may succeed.
+   */
+  TaskHandle modifyTaskLease(TaskHandle taskHandle, long lease, TimeUnit unit);
 }

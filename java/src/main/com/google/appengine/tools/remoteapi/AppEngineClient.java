@@ -6,7 +6,7 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.util.EncodingUtil;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,21 +17,14 @@ import java.util.List;
  *
  */
 abstract class AppEngineClient {
-  final String hostname;
+  private final String hostname;
   private final int port;
   private final String userEmail;
-  final Cookie[] authCookies;
+  private final Cookie[] authCookies;
   private final String remoteApiPath;
-  final int maxResponseSize;
+  private final int maxResponseSize;
 
   private final String appId;
-
-  static AppEngineClient newInstance(RemoteApiOptions options, List<Cookie> authCookies, String appId) {
-    if (options.isAppEngineContainer()) {
-      return new AppEngineUrlFetchClient(options, authCookies, appId);
-    }
-    return new AppEngineHttpClient(options, authCookies, appId);
-  }
 
   AppEngineClient(RemoteApiOptions options,
       List<Cookie> authCookies, String appId) {
@@ -52,17 +45,32 @@ abstract class AppEngineClient {
   }
 
   /**
-   * Returns that path to the remote api for this app (if logged in) or null (if not).
+   * @return the {@link Cookie} objects that should be used for authentication
+   */
+  Cookie[] getAuthCookies() {
+    return authCookies;
+  }
+
+  int getMaxResponseSize() {
+    return maxResponseSize;
+  }
+
+  /**
+   * @return the path to the remote api for this app (if logged in), {@code null} otherwise
    */
   String getRemoteApiPath() {
     return remoteApiPath;
   }
 
   /**
-   * Returns the app id for this app (if logged in) or null (if not).
+   * @return the app id for this app (if logged in), {@code null} otherwise
    */
   String getAppId() {
     return appId;
+  }
+
+  int getPort() {
+    return port;
   }
 
   String serializeCredentials() {
@@ -74,6 +82,7 @@ abstract class AppEngineClient {
     }
     return out.toString();
   }
+
   String makeUrl(String path) {
     if (!path.startsWith("/")) {
       throw new IllegalArgumentException("path doesn't start with a slash: " + path);
@@ -83,16 +92,20 @@ abstract class AppEngineClient {
   }
 
   List<String[]> getHeadersForPost(String mimeType) {
-    return Arrays.asList(
-        new String[]{"Host", hostname},
-        new String[]{"Content-type", mimeType},
-        new String[]{"X-appcfg-api-version", "1"});
+    List<String[]> headers = getHeadersBase();
+    headers.add(new String[]{"Content-type", mimeType});
+    return headers;
   }
 
   List<String[]> getHeadersForGet() {
-    return Arrays.asList(
-        new String[]{"Host", hostname},
-        new String[]{"X-appcfg-api-version", "1"});
+    return getHeadersBase();
+  }
+
+  List<String[]> getHeadersBase() {
+    List<String[]> headers = new ArrayList<String[]>();
+    headers.add(new String[]{"Host", hostname});
+    headers.add(new String[]{"X-appcfg-api-version", "1"});
+    return headers;
   }
 
   abstract Response get(String path) throws IOException;

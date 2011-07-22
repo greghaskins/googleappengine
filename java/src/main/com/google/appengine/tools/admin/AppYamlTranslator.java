@@ -4,6 +4,7 @@ package com.google.appengine.tools.admin;
 
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml.AdminConsolePage;
+import com.google.apphosting.utils.config.AppEngineWebXml.ApiConfig;
 import com.google.apphosting.utils.config.AppEngineWebXml.ErrorHandler;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.BackendsXml;
@@ -14,7 +15,6 @@ import com.google.apphosting.utils.glob.Glob;
 import com.google.apphosting.utils.glob.GlobFactory;
 import com.google.apphosting.utils.glob.GlobIntersector;
 import com.google.apphosting.utils.glob.LongestPatternConflictResolver;
-import com.google.common.base.Join;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,17 +58,20 @@ public class AppYamlTranslator {
   private final BackendsXml backendsXml;
   private final String apiVersion;
   private final Set<String> staticFiles;
+  private final ApiConfig apiConfig;
 
   public AppYamlTranslator(AppEngineWebXml appEngineWebXml,
                            WebXml webXml,
                            BackendsXml backendsXml,
                            String apiVersion,
-                           Set<String> staticFiles) {
+                           Set<String> staticFiles,
+                           ApiConfig apiConfig) {
     this.appEngineWebXml = appEngineWebXml;
     this.webXml = webXml;
     this.backendsXml = backendsXml;
     this.apiVersion = apiVersion;
     this.staticFiles = staticFiles;
+    this.apiConfig = apiConfig;
   }
 
   public String getYaml() {
@@ -137,29 +140,14 @@ public class AppYamlTranslator {
     }
 
     if (backendsXml != null) {
-      List<BackendsXml.Entry> backends = backendsXml.getBackends();
-      if (!backends.isEmpty()) {
-        builder.append("backends:\n");
-        for (BackendsXml.Entry entry : backends) {
-          builder.append("- name: '" + entry.getName() + "'\n");
-          if (entry.getInstances() != null) {
-            builder.append("  instances: " + entry.getInstances() + "\n");
-          }
-          if (entry.getInstanceClass() != null) {
-            builder.append("  class: '" + entry.getInstanceClass() + "'\n");
-          }
-          if (entry.getMaxConcurrentRequests() != null) {
-            builder.append("  max_concurrent_requests: " + entry.getMaxConcurrentRequests() + "\n");
-          }
-          List<String> options = new ArrayList<String>();
-          for (BackendsXml.Option option : entry.getOptions()) {
-            options.add(option.getYamlValue());
-          }
-          if (!options.isEmpty()) {
-            builder.append("  options: " + Join.join(", ", options) + "\n");
-          }
-        }
-      }
+      builder.append(backendsXml.toYaml());
+    }
+
+    ApiConfig apiConfig = appEngineWebXml.getApiConfig();
+    if (apiConfig != null) {
+      builder.append("api_config:\n");
+      builder.append("  url: " + apiConfig.getUrl() + "\n");
+      builder.append("  script: unused\n");
     }
   }
 
@@ -462,6 +450,14 @@ public class AppYamlTranslator {
           }
           builder.append("  secure: always\n");
           break;
+      }
+
+      String pattern = glob.getRegularExpression().pattern();
+      String id = webXml.getHandlerIdForPattern(pattern);
+      if (id != null) {
+        if (appEngineWebXml.isApiEndpoint(id)) {
+          builder.append("  api_endpoint: True\n");
+        }
       }
     }
 

@@ -3,6 +3,28 @@ All rights reserved.
 
 App Engine Java SDK - Release Notes
 
+Version 1.5.2
+=============
+- You can now specify the minimum pending latency for instances and the maximum
+  number of idle instances for your application in the Admin Console.
+- The datastore now never requires an exploding index.
+    http://code.google.com/appengine/docs/python/datastore/queries.html#Big_Entities_and_Exploding_Indexes
+- The SDK will now never suggest indexes with the same property repeated, as
+  such indexes are likely to be exploding indexes.
+- Datastore stats are now available on a per-namespace basis.
+- The queue details page in the Admin Console now contains request header
+  details, previous run information, and a task payload viewer.
+- You can modify the lease on a task leased from a pull queue using the
+  modifyTaskLease() method.
+- Pull Task maximum size has been increased to 1MB.
+- You can now update the number of available backend instances without needing
+  to first stop the backend using the "backend configure" appcfg directive.
+- You can now set the "References" and "In-Reply-To" headers with the Mail API.
+    http://code.google.com/p/googleappengine/issues/detail?id=2802
+- The whitelist has been updated to include support for JSR 105.
+- When the SDK throws a DatastoreNeedIndexException for a missing index
+  definition, the exception can now be caught.
+
 Version 1.5.1
 =============
 - The development server's datastore and testing service implementations now

@@ -27,6 +27,7 @@ class RemoteDatastore {
 
   private final RemoteRpc remoteRpc;
   private final RemoteApiOptions options;
+  private final String remoteAppId;
 
   /**
    * Contains an entry for every query we've ever run.
@@ -52,6 +53,7 @@ class RemoteDatastore {
   RemoteDatastore(RemoteRpc remoteRpc, RemoteApiOptions options) {
     this.remoteRpc = remoteRpc;
     this.options = options;
+    this.remoteAppId = remoteRpc.getClient().getAppId();
   }
 
   byte[] handleDatastoreCall(String methodName, byte[] request) {
@@ -87,6 +89,10 @@ class RemoteDatastore {
 
     DatastorePb.Query query = new DatastorePb.Query();
     query.mergeFrom(request);
+
+    if (rewriteQueryAppIds(query, remoteAppId)) {
+      request = query.toByteArray();
+    }
     query.setCompile(true);
 
     if (!query.hasCount()) {
@@ -121,6 +127,31 @@ class RemoteDatastore {
     return result.toByteArray();
   }
 
+  /**
+   * Rewrite app ids in the Query pb.
+   * @return if any app ids were rewritten
+   */
+  static boolean rewriteQueryAppIds(DatastorePb.Query query, String remoteAppId) {
+    boolean reserialize = false;
+    if (!query.getApp().equals(remoteAppId)) {
+      reserialize = true;
+      query.setApp(remoteAppId);
+    }
+    for (DatastorePb.Query.Filter filter : query.filters()) {
+      for (OnestoreEntity.Property prop : filter.propertys()) {
+        OnestoreEntity.PropertyValue propValue = prop.getMutableValue();
+        if (propValue.hasReferenceValue()) {
+          OnestoreEntity.PropertyValue.ReferenceValue ref = propValue.getMutableReferenceValue();
+          if (!ref.getApp().equals(remoteAppId)) {
+            reserialize = true;
+            ref.setApp(remoteAppId);
+          }
+        }
+      }
+    }
+    return reserialize;
+  }
+
   private byte[] handleNext(byte[] request) {
     DatastorePb.NextRequest nextRequest = new DatastorePb.NextRequest();
     nextRequest.mergeFrom(request);
@@ -147,13 +178,14 @@ class RemoteDatastore {
 
     DatastorePb.Transaction tx = new DatastorePb.Transaction();
     tx.setHandle(txId);
+    tx.setApp(remoteAppId);
     return tx.toByteArray();
   }
 
   private byte[] handleCommit(byte[] requestBytes) {
     DatastorePb.Transaction request = new DatastorePb.Transaction();
     request.mergeFrom(requestBytes);
-
+    request.setApp(remoteAppId);
     TransactionBuilder tx = removeTransactionBuilder("Commit", request);
 
     remoteRpc.call(REMOTE_API_SERVICE, "Transaction", "", tx.makeCommitRequest().toByteArray());
@@ -164,7 +196,7 @@ class RemoteDatastore {
   private byte[] handleRollback(byte[] requestBytes) {
     DatastorePb.Transaction request = new DatastorePb.Transaction();
     request.mergeFrom(requestBytes);
-
+    request.setApp(remoteAppId);
     removeTransactionBuilder("Rollback", request);
 
     return new ApiBasePb.VoidProto().toByteArray();
@@ -173,6 +205,10 @@ class RemoteDatastore {
   private byte[] handleGet(byte[] requestBytes) {
     DatastorePb.GetRequest request = new DatastorePb.GetRequest();
     request.mergeFrom(requestBytes);
+    if (rewriteReferenceAppIds(request.mutableKeys(), remoteAppId)) {
+      requestBytes = request.toByteArray();
+    }
+
     if (request.hasTransaction()) {
       return handleGetForTransaction(request);
     } else {
@@ -181,13 +217,15 @@ class RemoteDatastore {
   }
 
   private byte[] handlePut(byte[] requestBytes) {
-
     DatastorePb.PutRequest request = new DatastorePb.PutRequest();
     request.mergeFrom(requestBytes);
-
+    boolean reserialize = rewritePutAppIds(request, remoteAppId);
     if (request.hasTransaction()) {
       return handlePutForTransaction(request);
     } else {
+      if (reserialize) {
+        requestBytes = request.toByteArray();
+      }
       String suffix = "";
       if (logger.isLoggable(Level.FINE)) {
         suffix = describePutRequestForLog(request);
@@ -196,15 +234,54 @@ class RemoteDatastore {
     }
   }
 
+  static boolean rewritePutAppIds(DatastorePb.PutRequest request, String remoteAppId) {
+    boolean reserialize = false;
+    for (OnestoreEntity.EntityProto entity : request.mutableEntitys()) {
+      if (!entity.getMutableKey().getApp().equals(remoteAppId)) {
+        reserialize = true;
+        entity.getMutableKey().setApp(remoteAppId);
+      }
+      for (OnestoreEntity.Property prop : entity.mutablePropertys()) {
+        if (prop.hasValue() && prop.getMutableValue().hasReferenceValue()) {
+          OnestoreEntity.PropertyValue.ReferenceValue ref =
+              prop.getMutableValue().getReferenceValue();
+          if (ref.hasApp() && !ref.getApp().equals(remoteAppId)) {
+            reserialize = true;
+            ref.setApp(remoteAppId);
+          }
+        }
+      }
+    }
+    return reserialize;
+  }
+
   private byte[] handleDelete(byte[] requestBytes) {
     DatastorePb.DeleteRequest request = new DatastorePb.DeleteRequest();
     request.mergeFrom(requestBytes);
 
+    if (rewriteReferenceAppIds(request.mutableKeys(), remoteAppId)) {
+      requestBytes = request.toByteArray();
+    }
     if (request.hasTransaction()) {
       return handleDeleteForTransaction(request);
     } else {
       return remoteRpc.call(DATASTORE_SERVICE, "Delete", "", requestBytes);
     }
+  }
+
+  /**
+   * Replace app ids in the list of references.
+   */
+  static boolean rewriteReferenceAppIds(
+      List<OnestoreEntity.Reference> references, String remoteAppId) {
+    boolean reserialize = false;
+    for (OnestoreEntity.Reference ref : references) {
+      if (!ref.getApp().equals(remoteAppId)) {
+        reserialize = true;
+        ref.setApp(remoteAppId);
+      }
+    }
+    return reserialize;
   }
 
   byte[] handleGetForTransaction(DatastorePb.GetRequest request) {

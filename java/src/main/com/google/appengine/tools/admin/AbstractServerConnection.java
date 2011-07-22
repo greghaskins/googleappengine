@@ -204,6 +204,10 @@ public abstract class AbstractServerConnection implements ServerConnection {
     return send(POST, url, new StringPoster(payload), null, paramMap);
   }
 
+  protected HttpURLConnection openConnection(URL url) throws IOException {
+    return (HttpURLConnection) url.openConnection();
+  }
+
   protected String send(String method, String path, DataPoster payload, String content_type,
       Map<String, String> params) throws IOException {
 
@@ -215,7 +219,7 @@ public abstract class AbstractServerConnection implements ServerConnection {
 
     int tries = 0;
     while (true) {
-      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      HttpURLConnection conn = openConnection(url);
       conn.setRequestProperty("Content-type", content_type);
       conn.setRequestProperty("X-appcfg-api-version", "1");
 

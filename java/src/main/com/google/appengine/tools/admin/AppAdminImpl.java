@@ -42,20 +42,24 @@ public class AppAdminImpl implements AppAdmin {
     this.appVersionUploadClass = appVersionUploadClass;
   }
 
+  protected ServerConnection getServerConnection(ConnectOptions options) {
+    return ServerConnectionFactory.getServerConnection(options);
+  }
+
   public void update(UpdateListener listener) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     doUpdate(connection, listener, null);
     listener.onSuccess(new UpdateSuccessEvent(""));
   }
 
   public void updateBackend(String backendName, UpdateListener listener) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     doUpdate(connection, listener, backendName);
     listener.onSuccess(new UpdateSuccessEvent(""));
   }
 
   public void updateBackends(List<String> backendNames, UpdateListener listener) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     for (String backendName : backendNames) {
       doUpdate(connection, listener, backendName);
     }
@@ -63,7 +67,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void updateAllBackends(UpdateListener listener) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     if (app.getBackendsXml() != null) {
       for (BackendsXml.Entry backend : app.getBackendsXml().getBackends()) {
         doUpdate(connection, listener, backend.getName());
@@ -77,7 +81,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void rollbackBackend(String backend) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       AppVersionUpload uploader = createAppVersionUpload(connection, app, backend);
       uploader.forceRollback();
@@ -89,7 +93,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void rollbackAllBackends() {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     if (app.getBackendsXml() != null) {
       try {
         for (BackendsXml.Entry backend : app.getBackendsXml().getBackends()) {
@@ -117,7 +121,7 @@ public class AppAdminImpl implements AppAdmin {
         throw new IllegalArgumentException("Cannot change to state: " + newState);
     }
 
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       connection.post(url, "", "app_id", app.getAppId(), "backend", backendName);
     } catch (Throwable t) {
@@ -128,7 +132,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public List<BackendsXml.Entry> listBackends() {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       String yaml = connection.post("/api/backends/list", "", "app_id", app.getAppId());
       if (yaml.contains("No backends configured")) {
@@ -145,18 +149,30 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void deleteBackend(String backendName) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       connection.post("/api/backends/delete", "", "app_id", app.getAppId(), "backend", backendName);
     } catch (Throwable t) {
-      errorWriter.println("Unable to delete backends:");
+      errorWriter.println("Unable to delete backend:");
       t.printStackTrace(errorWriter);
-      throw new AdminException("Unable to backend backend: " + t.getMessage(), t);
+      throw new AdminException("Unable to delete backend: " + t.getMessage(), t);
+    }
+  }
+
+  public void configureBackend(String backendName) {
+    ServerConnection connection = getServerConnection(options);
+    try {
+      connection.post("/api/backends/configure", app.getBackendsXml().toYaml(),
+                      "app_id", app.getAppId(), "backend", backendName);
+    } catch (Throwable t) {
+      errorWriter.println("Unable to configure backend:");
+      t.printStackTrace(errorWriter);
+      throw new AdminException("Unable to configure backend: " + t.getMessage(), t);
     }
   }
 
   public void updateIndexes() {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       AppVersionUpload uploader = createAppVersionUpload(connection, app, null);
       uploader.updateIndexes();
@@ -168,7 +184,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void updateCron() {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       AppVersionUpload uploader = createAppVersionUpload(connection, app, null);
       uploader.updateCron();
@@ -180,7 +196,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void updateQueues() {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       AppVersionUpload uploader = createAppVersionUpload(connection, app, null);
       uploader.updateQueue();
@@ -192,7 +208,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public void updateDos() {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       AppVersionUpload uploader = createAppVersionUpload(connection, app, null);
       uploader.updateDos();
@@ -236,7 +252,7 @@ public class AppAdminImpl implements AppAdmin {
       listener.onFailure(new UpdateFailureEvent(e, message, detailMessage));
       throw e;
     }
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     IndexDeleter deleter = new IndexDeleter(connection, app, callback, errorWriter, listener);
     try {
       deleter.deleteUnusedIndexes();
@@ -248,7 +264,7 @@ public class AppAdminImpl implements AppAdmin {
   }
 
   public Reader requestLogs(int numDays, LogSeverity severity) {
-    ServerConnection connection = ServerConnectionFactory.getServerConnection(options);
+    ServerConnection connection = getServerConnection(options);
     try {
       File logFile = File.createTempFile(app.getAppId() + "-" + app.getVersion(), ".log");
       logFile.deleteOnExit();
@@ -263,7 +279,7 @@ public class AppAdminImpl implements AppAdmin {
   /**
    * Deploy a new version of this application. If successful, this method will
    * return without throwing an exception but will not call
-   * {@link UpdateListener#onSuccess(String)}. The caller is responsible for
+   * {@link UpdateListener#onSuccess(UpdateSuccessEvent)}. The caller is responsible for
    * calling that method.
    */
   private void doUpdate(ServerConnection connection, UpdateListener listener, String backend) {
