@@ -40,11 +40,12 @@ class PreparedQueryImpl extends BasePreparedQuery {
     TransactionImpl.ensureTxnActive(txn);
   }
 
+  @Override
   public List<Entity> asList(FetchOptions fetchOptions) {
-    FetchOptions override = new FetchOptions(fetchOptions);
     return new LazyList(runQuery(query, fetchOptions));
   }
 
+  @Override
   public QueryResultList<Entity> asQueryResultList(FetchOptions fetchOptions) {
     FetchOptions override = new FetchOptions(fetchOptions);
     if (override.getCompile() == null) {
@@ -60,10 +61,12 @@ class PreparedQueryImpl extends BasePreparedQuery {
     return new QueryResultListImpl<Entity>(lazyList, cursorProvider);
   }
 
+  @Override
   public Iterator<Entity> asIterator(FetchOptions fetchOptions) {
     return runQuery(query, fetchOptions);
   }
 
+  @Override
   public QueryResultIterator<Entity> asQueryResultIterator(FetchOptions fetchOptions) {
     if (fetchOptions.getCompile() == null) {
       fetchOptions = new FetchOptions(fetchOptions).compile(true);
@@ -71,6 +74,7 @@ class PreparedQueryImpl extends BasePreparedQuery {
     return runQuery(query, fetchOptions);
   }
 
+  @Override
   public Entity asSingleEntity() throws TooManyResultsException {
     List<Entity> entities = asList(withLimit(2));
     if (entities.isEmpty()) {

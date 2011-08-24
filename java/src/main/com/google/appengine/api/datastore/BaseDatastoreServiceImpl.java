@@ -1,4 +1,5 @@
-// Copyright 2010 Google. All Rights Reserved.
+// Copyright 2010 Google Inc. All Rights Reserved.
+
 package com.google.appengine.api.datastore;
 
 import com.google.apphosting.api.ApiProxy;
@@ -95,7 +96,8 @@ abstract class BaseDatastoreServiceImpl {
       case NONE:
         return new GetOrCreateTransactionResult(false, null);
       case AUTO:
-        return new GetOrCreateTransactionResult(true, beginTransactionInternal());
+        return new GetOrCreateTransactionResult(true, beginTransactionInternal(
+            TransactionOptions.Builder.withDefaults()));
       default:
         final String msg = "Unexpected Transaction Creation Policy: " +
             datastoreServiceConfig.getImplicitTransactionManagementPolicy();
@@ -111,10 +113,13 @@ abstract class BaseDatastoreServiceImpl {
     return remote;
   }
 
-  Transaction beginTransactionInternal() {
+  Transaction beginTransactionInternal(TransactionOptions options) {
     DatastorePb.Transaction remoteTxn = new DatastorePb.Transaction();
     DatastorePb.BeginTransactionRequest request = new DatastorePb.BeginTransactionRequest();
     request.setApp(DatastoreApiHelper.getCurrentAppId());
+    if (options.allowsMultipleEntityGroups() != null) {
+      request.setAllowMultipleEg(options.allowsMultipleEntityGroups());
+    }
 
     Future<DatastorePb.Transaction> future =
         DatastoreApiHelper.makeAsyncCall(apiConfig, "BeginTransaction", request, remoteTxn);
@@ -132,9 +137,5 @@ abstract class BaseDatastoreServiceImpl {
 
   public Transaction getCurrentTransaction(Transaction returnedIfNoTxn) {
     return defaultTxnProvider.peek(returnedIfNoTxn);
-  }
-
-  public DatastoreAttributes getDatastoreAttributes() {
-    return new DatastoreAttributes();
   }
 }

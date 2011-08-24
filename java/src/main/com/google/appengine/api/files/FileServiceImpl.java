@@ -452,7 +452,6 @@ class FileServiceImpl implements FileService {
         return new FileNotFoundException();
       case FINALIZATION_ERROR:
         return new FinalizationException(message, ex);
-      case WRONG_KEY_ORDER:
       case SEQUENCE_KEY_OUT_OF_ORDER:
         return new KeyOrderingException(message, ex);
       default:

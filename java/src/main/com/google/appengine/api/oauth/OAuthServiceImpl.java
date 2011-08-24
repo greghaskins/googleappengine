@@ -24,13 +24,19 @@ final class OAuthServiceImpl implements OAuthService {
   private static final String GET_OAUTH_USER_METHOD = "GetOAuthUser";
 
   public User getCurrentUser() throws OAuthRequestException {
-    GetOAuthUserResponse response = getGetOAuthUserResponse();
+    GetOAuthUserResponse response = getGetOAuthUserResponse(null);
+    return new User(response.getEmail(), response.getAuthDomain(),
+        response.getUserId());
+  }
+
+  public User getCurrentUser(String scope) throws OAuthRequestException {
+    GetOAuthUserResponse response = getGetOAuthUserResponse(scope);
     return new User(response.getEmail(), response.getAuthDomain(),
         response.getUserId());
   }
 
   public boolean isUserAdmin() throws OAuthRequestException {
-    GetOAuthUserResponse response = getGetOAuthUserResponse();
+    GetOAuthUserResponse response = getGetOAuthUserResponse(null);
     return response.isIsAdmin();
   }
 
@@ -42,13 +48,16 @@ final class OAuthServiceImpl implements OAuthService {
     return response.getOauthConsumerKey();
   }
 
-  private GetOAuthUserResponse getGetOAuthUserResponse()
+  private GetOAuthUserResponse getGetOAuthUserResponse(String scope)
       throws OAuthRequestException {
     ApiProxy.Environment environment = ApiProxy.getCurrentEnvironment();
     GetOAuthUserResponse response = (GetOAuthUserResponse)
         environment.getAttributes().get(GET_OAUTH_USER_RESPONSE_KEY);
     if (response == null) {
       GetOAuthUserRequest request = new GetOAuthUserRequest();
+      if (scope != null) {
+        request.setScope(scope);
+      }
       byte[] responseBytes = makeSyncCall(GET_OAUTH_USER_METHOD, request);
       response = new GetOAuthUserResponse();
       response.mergeFrom(responseBytes);

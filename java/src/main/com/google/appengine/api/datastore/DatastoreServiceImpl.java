@@ -144,12 +144,12 @@ final class DatastoreServiceImpl extends BaseDatastoreServiceImpl implements Dat
 
   @Override
   public KeyRange allocateIds(String kind, long num) {
-    return FutureHelper.quietGet(async.allocateIds(kind, num));
+    return quietGet(async.allocateIds(kind, num));
   }
 
   @Override
   public KeyRange allocateIds(Key parent, String kind, long num) {
-    return FutureHelper.quietGet(async.allocateIds(parent, kind, num));
+    return quietGet(async.allocateIds(parent, kind, num));
   }
 
   @Override
@@ -163,7 +163,7 @@ final class DatastoreServiceImpl extends BaseDatastoreServiceImpl implements Dat
         .setModelKey(AsyncDatastoreServiceImpl.buildAllocateIdsRef(parent, kind))
         .setMax(end);
     DatastorePb.AllocateIdsResponse resp = new DatastorePb.AllocateIdsResponse();
-    resp = FutureHelper.quietGet(DatastoreApiHelper.makeAsyncCall(
+    resp = quietGet(DatastoreApiHelper.makeAsyncCall(
         apiConfig, "AllocateIds", req, resp));
 
     Query query = new Query(kind).setKeysOnly();
@@ -181,6 +181,21 @@ final class DatastoreServiceImpl extends BaseDatastoreServiceImpl implements Dat
 
   @Override
   public Transaction beginTransaction() {
-    return beginTransactionInternal();
+    return beginTransaction(TransactionOptions.Builder.withDefaults());
+  }
+
+  @Override
+  public Transaction beginTransaction(TransactionOptions options) {
+    return beginTransactionInternal(options);
+  }
+
+  @Override
+  public DatastoreAttributes getDatastoreAttributes() {
+    return quietGet(async.getDatastoreAttributes());
+  }
+
+  @Override
+  public Map<Index, Index.IndexState> getIndexes() {
+    return quietGet(async.getIndexes());
   }
 }

@@ -11,7 +11,7 @@ public class DatastoreNeedIndexException extends RuntimeException {
 
   static final long serialVersionUID = 9218197931741583584L;
 
-  static final String NO_XML_MESSAGE = ".  An index is missing but we are unable to tell you which "
+  static final String NO_XML_MESSAGE = "\nAn index is missing but we are unable to tell you which "
       + "one due to a bug in the App Engine SDK.  If your query only contains equality filters you "
       + "most likely need a composite index on all the properties referenced in those filters.";
 
@@ -23,7 +23,8 @@ public class DatastoreNeedIndexException extends RuntimeException {
 
   @Override
   public String getMessage() {
-    return super.getMessage() + (xml == null ? NO_XML_MESSAGE : ".  " + xml);
+    return super.getMessage() + (xml == null ? NO_XML_MESSAGE :
+        "\nThe suggested index for this query is:\n" + xml);
   }
 
   /**

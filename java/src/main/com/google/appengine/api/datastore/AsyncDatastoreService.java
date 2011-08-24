@@ -1,4 +1,4 @@
-// Copyright 2010 Google. All Rights Reserved.
+// Copyright 2010 Google Inc. All Rights Reserved.
 package com.google.appengine.api.datastore;
 
 import java.util.List;
@@ -25,6 +25,11 @@ public interface AsyncDatastoreService extends BaseDatastoreService {
    * @see DatastoreService#beginTransaction()
    */
   Future<Transaction> beginTransaction();
+
+  /**
+   * @see DatastoreService#beginTransaction(TransactionOptions)
+   */
+  Future<Transaction> beginTransaction(TransactionOptions options);
 
   /**
    * @see DatastoreService#get(Key)
@@ -95,4 +100,14 @@ public interface AsyncDatastoreService extends BaseDatastoreService {
    * @see DatastoreService#allocateIds(Key, String, long)
    */
   Future<KeyRange> allocateIds(Key parent, String kind, long num);
+
+  /**
+   * @see DatastoreService#getDatastoreAttributes()
+   */
+  Future<DatastoreAttributes> getDatastoreAttributes();
+
+  /**
+   * @see DatastoreService#getIndexes()
+   */
+  Future<Map<Index, Index.IndexState>> getIndexes();
 }

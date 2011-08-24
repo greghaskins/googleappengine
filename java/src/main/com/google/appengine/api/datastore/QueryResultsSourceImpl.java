@@ -45,7 +45,7 @@ class QueryResultsSourceImpl implements QueryResultsSource {
         fetchOptions.getOffset() : 0;
     this.txn = txn;
     this.nextResult = firstResult;
-    this.skippedResults = -1;
+    this.skippedResults = 0;
   }
 
   @Override
@@ -130,21 +130,13 @@ class QueryResultsSourceImpl implements QueryResultsSource {
   /**
    * Helper function to process the query results.
    *
-   * This function adds results to the given buffer, updates {@link
-   * #skippedResults} and will force res.isMoreResults() to be false
-   * if no progress was made.
+   * This function adds results to the given buffer and updates {@link
+   * #skippedResults}.
    *
    * @param res The {@link QueryResult} to process
    * @param buffer the buffer to which to add results
    */
   private void processQueryResult(QueryResult res, List<Entity> buffer) {
-    if (skippedResults < 0) {
-      skippedResults = 0;
-    } else if (res.getSkippedResults() <= 0 && res.resultSize() <= 0) {
-      res.setMoreResults(false);
-      return;
-    }
-
     skippedResults += res.getSkippedResults();
     for (EntityProto entityProto : res.results()) {
       buffer.add(EntityTranslator.createFromPb(entityProto));

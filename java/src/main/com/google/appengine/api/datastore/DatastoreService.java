@@ -116,7 +116,7 @@ public interface DatastoreService extends BaseDatastoreService {
    *
    * @throws IllegalArgumentException If the specified entity was incomplete.
    * @throws ConcurrentModificationException If the entity group to which the
-   * entity belongs was modified concurrently.
+   *    entity belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   Key put(Entity entity);
@@ -127,9 +127,9 @@ public interface DatastoreService extends BaseDatastoreService {
    * rollback.  Transaction can be null.
    *
    * @throws IllegalStateException If {@code txn} is not null and not
-   * active.
+   *    active.
    * @throws ConcurrentModificationException If the entity group to which the
-   * entity belongs was modified concurrently.
+   *    entity belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   Key put(Transaction txn, Entity entity);
@@ -153,7 +153,7 @@ public interface DatastoreService extends BaseDatastoreService {
    *
    * @throws IllegalArgumentException If any entity is incomplete.
    * @throws ConcurrentModificationException If an entity group to which any
-   * provided entity belongs was modified concurrently.
+   *    provided entity belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   List<Key> put(Iterable<Entity> entities);
@@ -172,7 +172,7 @@ public interface DatastoreService extends BaseDatastoreService {
    *
    * @throws IllegalStateException If {@code txn} is not null and not active.
    * @throws ConcurrentModificationException If an entity group to which any
-   * provided entity belongs was modified concurrently.
+   *    provided entity belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   List<Key> put(Transaction txn, Iterable<Entity> entities);
@@ -189,7 +189,7 @@ public interface DatastoreService extends BaseDatastoreService {
    *
    * @throws IllegalArgumentException If the specified key was invalid.
    * @throws ConcurrentModificationException If an entity group to which any
-   * provided key belongs was modified concurrently.
+   *    provided key belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   void delete(Key... keys);
@@ -201,7 +201,7 @@ public interface DatastoreService extends BaseDatastoreService {
    *
    * @throws IllegalStateException If {@code txn} is not null and not active.
    * @throws ConcurrentModificationException If an entity group to which any
-   * provided key belongs was modified concurrently.
+   *    provided key belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   void delete(Transaction txn, Key... keys);
@@ -210,22 +210,31 @@ public interface DatastoreService extends BaseDatastoreService {
    * Equivalent to {@link #delete(Key...)}.
    *
    * @throws ConcurrentModificationException If an entity group to which any
-   * provided key belongs was modified concurrently.
+   *    provided key belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   void delete(Iterable<Key> keys);
 
   /**
    * Exhibits the same behavior as {@link #delete(Iterable)}, but executes within
-   * the provided transaction.  It is up to the caller to commit or
-   * rollback.  Transaction can be null.
+   * the provided transaction.  It is up to the caller to commit or rollback.
+   * Transaction can be null.
    *
    * @throws IllegalStateException If {@code txn} is not null and not active.
    * @throws ConcurrentModificationException If an entity group to which any
-   * provided key belongs was modified concurrently.
+   *    provided key belongs was modified concurrently.
    * @throws DatastoreFailureException If any other datastore error occurs.
    */
   void delete(Transaction txn, Iterable<Key> keys);
+
+  /**
+   * Equivalent to {@code beginTransaction(TransactionOptions.Builder.withDefaults())}.
+   *
+   * @return the {@code Transaction} that was started.
+   * @throws DatastoreFailureException If a datastore error occurs.
+   * @see #beginTransaction(TransactionOptions)
+   */
+  Transaction beginTransaction();
 
   /**
    * Begins a transaction against the datastore.  Callers are responsible
@@ -233,7 +242,7 @@ public interface DatastoreService extends BaseDatastoreService {
    * {@link Transaction#rollback()} when they no longer need the
    * {@code Transaction}.
    *
-   * The {@code Transaction} returned by this call will be considered the
+   * <p>The {@code Transaction} returned by this call will be considered the
    * current transaction and will be returned by subsequent, same-thread calls
    * to {@link #getCurrentTransaction()} and
    * {@link #getCurrentTransaction(Transaction)} until one of the following happens:
@@ -249,11 +258,13 @@ public interface DatastoreService extends BaseDatastoreService {
    * returns successfully, the {@code Transaction} will no longer be the
    * current transaction.
    *
+   * @param options The options for the new transaction.
    * @return the {@code Transaction} that was started.
    * @throws DatastoreFailureException If a datastore error occurs.
    * @see #getCurrentTransaction()
+   * @see TransactionOptions
    */
-  Transaction beginTransaction();
+  Transaction beginTransaction(TransactionOptions options);
 
   /**
    * IDs are allocated within a namespace defined by a parent key and a kind.
@@ -375,4 +386,9 @@ public interface DatastoreService extends BaseDatastoreService {
    * @throws DatastoreFailureException If a datastore error occurs.
    */
   DatastoreAttributes getDatastoreAttributes();
+
+  /**
+   * Returns the application indexes and their states.
+   */
+  Map<Index, Index.IndexState> getIndexes();
 }

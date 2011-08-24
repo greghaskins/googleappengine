@@ -8,7 +8,11 @@ import com.google.storage.onestore.v3.OnestoreEntity.Index;
 import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
 import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Composite index management operations needed by the datastore api.
@@ -81,7 +85,7 @@ public class CompositeIndexManager {
   }
 
   /**
-   * Given a {@link DatastorePb.Query}, return the {@link Index}
+   * Given a {@link IndexComponentsOnlyQuery}, return the {@link Index}
    * needed to fulfill the query, or {@code null} if no index is needed.
    *
    * This code needs to remain in sync with its counterparts in other
@@ -96,7 +100,7 @@ public class CompositeIndexManager {
     DatastorePb.Query query = indexOnlyQuery.getQuery();
 
     boolean hasKind = query.hasKind();
-    boolean hasAncestor = query.hasAncestor();
+    boolean isAncestor = query.hasAncestor();
     List<Filter> filters = query.filters();
     List<Order> orders = query.orders();
 
@@ -104,7 +108,7 @@ public class CompositeIndexManager {
       return null;
     }
 
-    List<String> eqProps = indexOnlyQuery.getEqualityProps();
+    Set<String> eqProps = indexOnlyQuery.getEqualityProps();
     List<Property> indexProperties = indexOnlyQuery.getIndexProps();
 
     if (hasKind && !eqProps.isEmpty() &&
@@ -114,7 +118,7 @@ public class CompositeIndexManager {
       return null;
     }
 
-    if (hasKind && !hasAncestor && indexProperties.size() <= 1 &&
+    if (hasKind && !isAncestor && indexProperties.size() <= 1 &&
         (!indexOnlyQuery.hasKeyProperty() ||
             indexProperties.get(0).getDirectionEnum() == Property.Direction.ASCENDING)) {
       return null;
@@ -122,9 +126,80 @@ public class CompositeIndexManager {
 
     Index index = new Index();
     index.setEntityType(query.getKind());
-    index.setAncestor(hasAncestor);
+    index.setAncestor(isAncestor);
     index.mutablePropertys().addAll(indexProperties);
     return index;
+  }
+
+  /**
+   * Given a {@link IndexComponentsOnlyQuery} and a collection of existing
+   * {@link Index}s, return the minimum {@link Index} needed to fulfill
+   * the query, or {@code null} if no index is needed.
+   *
+   * This code needs to remain in sync with its counterparts in other
+   * languages.  If you modify this code please make sure you make the
+   * same update in the local datastore for other languages.
+   *
+   * @param indexOnlyQuery The query.
+   * @param indexes The existing indexes.
+   * @return The minimum index that must be present in order to fulfill the
+   * query, or {@code null} if no index is needed.
+   */
+  protected Index minimumCompositeIndexForQuery(IndexComponentsOnlyQuery indexOnlyQuery,
+      Collection<Index> indexes) {
+    List<Property> postfix = indexOnlyQuery.getIndexProps().subList(
+        indexOnlyQuery.getEqualityProps().size(), indexOnlyQuery.getIndexProps().size());
+    Set<String> prefixRemaining = new HashSet<String>(indexOnlyQuery.getEqualityProps());
+    boolean ancestorRemaining = indexOnlyQuery.getQuery().hasAncestor();
+
+    Index index = compositeIndexForQuery(indexOnlyQuery);
+    for (Index candidateIndex : indexes) {
+      int indexPrefixSize = candidateIndex.propertySize() - postfix.size();
+      if (!candidateIndex.getEntityType().equals(index.getEntityType()) ||
+          (!indexOnlyQuery.getQuery().hasAncestor() && candidateIndex.isAncestor()) ||
+          indexPrefixSize < 0) {
+        continue;
+      }
+
+      List<Property> indexPostfix = candidateIndex.propertys().subList(
+        indexPrefixSize, candidateIndex.propertySize());
+
+      if (!postfix.equals(indexPostfix)) {
+        continue;
+      }
+
+      Set<String> indexPrefix = new HashSet<String>(indexPrefixSize);
+      for (Property prop : candidateIndex.propertys().subList(0, indexPrefixSize)) {
+        indexPrefix.add(prop.getName());
+      }
+
+      if (!indexOnlyQuery.getEqualityProps().containsAll(indexPrefix)) {
+        continue;
+      }
+
+      prefixRemaining.removeAll(indexPrefix);
+      if (candidateIndex.isAncestor()) {
+        ancestorRemaining = false;
+      }
+
+      if (prefixRemaining.isEmpty() && !ancestorRemaining) {
+        return null;
+      }
+    }
+
+    Index minimumIndex = index.clone();
+    if (!ancestorRemaining) {
+      minimumIndex.setAncestor(false);
+    }
+    Iterator<Property> itr = minimumIndex.mutablePropertys().subList(
+        0, indexOnlyQuery.getEqualityProps().size()).iterator();
+    while (itr.hasNext()) {
+      Property prop = itr.next();
+      if (!prefixRemaining.contains(prop.getName())) {
+        itr.remove();
+      }
+    }
+    return minimumIndex;
   }
 
   /**

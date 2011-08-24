@@ -31,6 +31,7 @@ public class BlobInfoFactory {
   public static final String CREATION = "creation";
   public static final String FILENAME = "filename";
   public static final String SIZE = "size";
+  public static final String MD5_HASH = "md5_hash";
 
   private final DatastoreService datastoreService;
 
@@ -115,12 +116,22 @@ public class BlobInfoFactory {
    * specified {@link Entity}.
    */
   public BlobInfo createBlobInfo(Entity entity) {
-    return new BlobInfo(
-        new BlobKey(entity.getKey().getName()),
-        (String) entity.getProperty(CONTENT_TYPE),
-        (Date) entity.getProperty(CREATION),
-        (String) entity.getProperty(FILENAME),
-        (Long) entity.getProperty(SIZE));
+    if (entity.hasProperty(MD5_HASH)) {
+      return new BlobInfo(
+          new BlobKey(entity.getKey().getName()),
+          (String) entity.getProperty(CONTENT_TYPE),
+          (Date) entity.getProperty(CREATION),
+          (String) entity.getProperty(FILENAME),
+          (Long) entity.getProperty(SIZE),
+          (String) entity.getProperty(MD5_HASH));
+    } else {
+      return new BlobInfo(
+          new BlobKey(entity.getKey().getName()),
+          (String) entity.getProperty(CONTENT_TYPE),
+          (Date) entity.getProperty(CREATION),
+          (String) entity.getProperty(FILENAME),
+          (Long) entity.getProperty(SIZE));
+    }
   }
 
   private Key getMetadataKeyForBlobKey(BlobKey blobKey) {

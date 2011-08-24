@@ -417,7 +417,7 @@ public final class FetchOptions {
 
     /**
      * Create a {@link FetchOptions} with the given limit.  Shorthand for
-     * <code>FetchOptions.withDefaults().limit(5);</code>  Please read the
+     * <code>FetchOptions.withDefaults().limit(...);</code>  Please read the
      * {@link FetchOptions} class javadoc for an explanation of how limit
      * is used.
      * @param limit the limit to set.
@@ -429,7 +429,7 @@ public final class FetchOptions {
 
     /**
      * Create a {@link FetchOptions} with the given offset.  Shorthand for
-     * <code>FetchOptions.withDefaults().offset(5);</code>  Please read the
+     * <code>FetchOptions.withDefaults().offset(...);</code>  Please read the
      * {@link FetchOptions} class javadoc for an explanation of how offset
      * is used.
      * @param offset the offset to set.
@@ -441,7 +441,7 @@ public final class FetchOptions {
 
     /**
      * Create a {@link FetchOptions} with the given chunk size.  Shorthand for
-     * <code>FetchOptions.withDefaults().chunkSize(5);</code>  Please read the
+     * <code>FetchOptions.withDefaults().chunkSize(...);</code>  Please read the
      * {@link FetchOptions} class javadoc for an explanation of how chunk size
      * is used.
      * @param chunkSize the chunkSize to set.
@@ -453,7 +453,7 @@ public final class FetchOptions {
 
     /**
      * Create a {@link FetchOptions} with the given prefetch size.
-     * Shorthand for <code>FetchOptions.withDefaults().prefetchSize(5);</code>.
+     * Shorthand for <code>FetchOptions.withDefaults().prefetchSize(...);</code>.
      * Please read the {@link FetchOptions} class javadoc for an explanation of
      * how prefetch size is used.
      * @param prefetchSize the prefetchSize to set.

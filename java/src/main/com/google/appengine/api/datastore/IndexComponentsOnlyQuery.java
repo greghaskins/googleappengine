@@ -34,7 +34,7 @@ import java.util.Set;
  * constructs a list of index properties.
  */
 class IndexComponentsOnlyQuery extends ValidatedQuery {
-  private final List<String> equalityProps = new ArrayList<String>();
+  private final Set<String> equalityProps = new HashSet<String>();
   private final List<Property> indexProps = new ArrayList<Property>();
   private boolean hasKeyProperty = false;
 
@@ -82,6 +82,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
    * We compare {@link Property Properties} by comparing their names.
    */
   private static final Comparator<Property> PROPERTY_NAME_COMPARATOR = new Comparator<Property>() {
+    @Override
     public int compare(Property o1, Property o2) {
       return o1.getName().compareTo(o2.getName());
     }
@@ -112,7 +113,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
       }
     }
 
-    for (String eqProp : new HashSet<String>(equalityProps)) {
+    for (String eqProp : equalityProps) {
       indexProps.add(newIndexProperty(eqProp, Direction.ASCENDING));
     }
 
@@ -155,7 +156,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
     return indexProperty;
   }
 
-  public List<String> getEqualityProps() {
+  public Set<String> getEqualityProps() {
     return equalityProps;
   }
 

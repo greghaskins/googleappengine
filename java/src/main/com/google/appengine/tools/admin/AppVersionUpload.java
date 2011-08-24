@@ -2,12 +2,9 @@
 
 package com.google.appengine.tools.admin;
 
+import com.google.appengine.tools.admin.Application.ErrorHandler;
 import com.google.appengine.tools.util.FileIterator;
-import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.common.base.Join;
-
-import org.mortbay.io.Buffer;
-import org.mortbay.jetty.MimeTypes;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,15 +13,13 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
@@ -54,11 +49,8 @@ public class AppVersionUpload {
    */
   private static final int MAX_FILES_PER_PRECOMPILE = 50;
 
-  private static final MimeTypes mimeTypes = new MimeTypes();
-
   protected ServerConnection connection;
   protected Application app;
-  protected final String majorVersionId;
   protected final String backend;
   private Logger logger = Logger.getLogger(AppVersionUpload.class.getName());
   private boolean inTransaction = false;
@@ -66,7 +58,7 @@ public class AppVersionUpload {
   private boolean deployed = false;
 
   public AppVersionUpload(ServerConnection connection, Application app) {
-    this(connection, app, null, null);
+    this(connection, app, null);
   }
 
   /**
@@ -76,21 +68,13 @@ public class AppVersionUpload {
    * @param connection to connect to the server
    * @param app that contains the code to be deployed
    * @param backend if supplied and non-{@code null}, a particular backend is
-   *        being updated,
-   * @param majorVersionId if supplied and non-{@code null}, the application
-   *        will be deployed to this version rather than the one specified in
-   *        {@code appengine-web.xml}.
+   *        being updated
    */
   public AppVersionUpload(ServerConnection connection, Application app,
-      String backend, String majorVersionId) {
+      String backend) {
     this.connection = connection;
     this.app = app;
     this.backend = backend;
-    if (majorVersionId != null) {
-      this.majorVersionId = majorVersionId;
-    } else {
-      this.majorVersionId = app.getAppEngineWebXml().getMajorVersionId();
-    }
   }
 
   /***
@@ -140,8 +124,8 @@ public class AppVersionUpload {
           }
         }
       }
-      uploadErrorHandlers(app.getAppEngineWebXml(), basepath);
-      if (app.getAppEngineWebXml().getPrecompilationEnabled()) {
+      uploadErrorHandlers(app.getErrorHandlers(), basepath);
+      if (app.isPrecompilationEnabled()) {
         precompile();
       }
       commit();
@@ -155,21 +139,19 @@ public class AppVersionUpload {
     updateDos();
   }
 
-  private void uploadErrorHandlers(AppEngineWebXml appEngineWebXml,
-      File basepath) throws IOException {
-    Collection<AppEngineWebXml.ErrorHandler> errorHandlers =
-        appEngineWebXml.getErrorHandlers();
+  private void uploadErrorHandlers(List<ErrorHandler> errorHandlers, File basepath)
+    throws IOException {
     if (!errorHandlers.isEmpty()) {
       app.statusUpdate("Uploading " + errorHandlers.size() + " file(s) "
           + "for static error handlers.");
-      for (AppEngineWebXml.ErrorHandler handler : errorHandlers) {
-        File file = new File(basepath, "__static__/" + handler.getFile());
+      for (ErrorHandler handler : errorHandlers) {
+        File file = new File(basepath, handler.getFile());
         FileInfo info = new FileInfo(file, basepath);
         String error = info.checkValidFilename();
         if (error != null) {
           throw new IOException("Could not find static error handler: " + error);
         }
-        info.mimeType = getMimeType(info.path);
+        info.mimeType = handler.getMimeType();
         String errorType = handler.getErrorCode();
         if (errorType == null) {
           errorType = "default";
@@ -346,22 +328,6 @@ public class AppVersionUpload {
     }
   }
 
-  protected String getAppYaml() {
-    Set<String> staticFiles = new HashSet<String>();
-    for (FileInfo info : files.values()) {
-      if (isStatic(info)) {
-        staticFiles.add(info.path);
-      }
-    }
-
-    AppYamlTranslator translator =
-        new AppYamlTranslator(app.getAppEngineWebXml(), app.getWebXml(), app.getBackendsXml(),
-                              app.getApiVersion(), staticFiles, null);
-    String yaml = translator.getYaml();
-    logger.fine("Generated app.yaml file:\n" + yaml);
-    return yaml;
-  }
-
   private File getBasepath() {
     File path = app.getStagingDir();
     if (path == null) {
@@ -392,8 +358,8 @@ public class AppVersionUpload {
       return 0;
     }
 
-    if (isStatic(info)) {
-      info.mimeType = getMimeType(info.path);
+    info.mimeType = app.getMimeTypeIfStatic(info.path);
+    if (info.mimeType != null) {
       returnBytes = 0;
     }
     files.put(info.path, info);
@@ -418,7 +384,7 @@ public class AppVersionUpload {
     } else {
       app.statusUpdate("Initiating update of backend " + backend + ".");
     }
-    send("/api/appversion/create", getAppYaml());
+    send("/api/appversion/create", app.getAppYaml());
     inTransaction = true;
     Collection<FileInfo> blobsToClone = new ArrayList<FileInfo>(files.size());
     Collection<FileInfo> filesToClone = new ArrayList<FileInfo>(files.size());
@@ -626,9 +592,9 @@ public class AppVersionUpload {
     if (backend != null) {
       result.add("backend");
       result.add(backend);
-    } else if (majorVersionId != null) {
+    } else if (app.getVersion() != null) {
       result.add("version");
-      result.add(majorVersionId);
+      result.add(app.getVersion());
     }
     return result.toArray(new String[result.size()]);
   }
@@ -668,10 +634,6 @@ public class AppVersionUpload {
     return false;
   }
 
-  private boolean isStatic(FileInfo info) {
-    return info.path.contains("__static__/");
-  }
-
   private static final String TUPLE_DELIMITER = "|";
 
   /**
@@ -701,20 +663,6 @@ public class AppVersionUpload {
     return data.toString();
   }
 
-  private String getMimeType(String path) {
-    String mimeType = app.getWebXml().getMimeTypeForPath(path);
-    if (mimeType != null) {
-      return mimeType;
-    }
-
-    Buffer buffer = mimeTypes.getMimeByExtension(path);
-    if (buffer != null) {
-      return new String(buffer.asArray());
-    } else {
-      return "application/octet-stream";
-    }
-  }
-
   private static class FileInfo implements Comparable<FileInfo> {
     public File file;
     public String path;
@@ -723,7 +671,7 @@ public class AppVersionUpload {
 
     public FileInfo(File f, File base) throws IOException {
       this.file = f;
-      this.path = calculatePath(f, base);
+      this.path = Utility.calculatePath(f, base);
       this.hash = calculateHash();
     }
 
@@ -810,21 +758,6 @@ public class AppVersionUpload {
           ;
         }
       }
-    }
-
-    private static String calculatePath(File f, File base) {
-      int offset = base.getPath().length();
-      String path = f.getPath().substring(offset);
-      if (File.separatorChar == '\\') {
-        path = path.replace('\\', '/');
-      }
-
-      for (offset = 0; path.charAt(offset) == '/'; ++offset);
-      if (offset > 0) {
-        path = path.substring(offset);
-      }
-
-      return path;
     }
   }
 }

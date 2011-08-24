@@ -47,6 +47,21 @@ public class Utility {
     return !isOsUnix();
   }
 
+  public static String calculatePath(File f, File base) {
+    int offset = base.getPath().length();
+    String path = f.getPath().substring(offset);
+    if (File.separatorChar == '\\') {
+      path = path.replace('\\', '/');
+    }
+
+    for (offset = 0; path.charAt(offset) == '/'; ++offset);
+    if (offset > 0) {
+      path = path.substring(offset);
+    }
+
+    return path;
+  }
+
   private Utility() {
   }
 }

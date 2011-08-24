@@ -1,4 +1,5 @@
-// Copyright 2010 Google. All Rights Reserved.
+// Copyright 2010 Google Inc. All Rights Reserved.
+
 package com.google.appengine.api.datastore;
 
 import java.util.Collection;
@@ -72,4 +73,5 @@ public interface BaseDatastoreService {
    * attempt to commit or rollback has been made.
    */
   Collection<Transaction> getActiveTransactions();
+
 }

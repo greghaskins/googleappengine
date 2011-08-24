@@ -4,14 +4,22 @@ package com.google.appengine.api.datastore;
 
 import static com.google.appengine.api.datastore.DatastoreApiHelper.makeAsyncCall;
 import static com.google.appengine.api.datastore.DatastoreAttributes.DatastoreType.HIGH_REPLICATION;
+import static com.google.appengine.api.datastore.FutureHelper.quietGet;
 import static com.google.appengine.api.datastore.ImplicitTransactionManagementPolicy.AUTO;
 import static com.google.appengine.api.datastore.ReadPolicy.Consistency.EVENTUAL;
 import static com.google.appengine.api.datastore.ReadPolicy.Consistency.STRONG;
 
+import com.google.appengine.api.datastore.DatastoreAttributes.DatastoreType;
 import com.google.appengine.api.datastore.FutureHelper.CumulativeAggregateFuture;
+import com.google.appengine.api.datastore.Index;
+import com.google.appengine.api.datastore.Index.IndexState;
+import com.google.appengine.api.datastore.Index.Property;
+import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.utils.FutureWrapper;
+import com.google.apphosting.api.ApiBasePb.StringProto;
 import com.google.apphosting.api.DatastorePb.AllocateIdsRequest;
 import com.google.apphosting.api.DatastorePb.AllocateIdsResponse;
+import com.google.apphosting.api.DatastorePb.CompositeIndices;
 import com.google.apphosting.api.DatastorePb.DeleteRequest;
 import com.google.apphosting.api.DatastorePb.DeleteResponse;
 import com.google.apphosting.api.DatastorePb.GetRequest;
@@ -20,6 +28,7 @@ import com.google.apphosting.api.DatastorePb.PutRequest;
 import com.google.apphosting.api.DatastorePb.PutResponse;
 import com.google.common.base.Pair;
 import com.google.io.protocol.Protocol;
+import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 
@@ -33,6 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 
 /**
  * Implements AsyncDatastoreService by making calls to ApiProxy.
@@ -59,7 +69,7 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
     protected abstract V initResult();
 
     @Override
-    final protected Pair<Iterator<I>, V> aggregate(K intermediateResult,
+    protected final Pair<Iterator<I>, V> aggregate(K intermediateResult,
         Pair<Iterator<I>, V> result) {
       return Pair.of(result.first, aggregate(intermediateResult, result.first, result.second));
     }
@@ -70,7 +80,7 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
     }
 
     @Override
-    final protected Pair<Iterator<I>, V> initIntermediateResult() {
+    protected final Pair<Iterator<I>, V> initIntermediateResult() {
       return Pair.of(initIterator(), initResult());
     }
   }
@@ -88,7 +98,7 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
       this.item = item;
       this.index = index;
     }
-
+    
     @Override
     public int compareTo(IndexedItem other) {
       return Integer.valueOf(index).compareTo(other.index);
@@ -184,6 +194,8 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
     }
   };
 
+  private DatastoreType datastoreType;
+  
   public AsyncDatastoreServiceImpl(
       DatastoreServiceConfig datastoreServiceConfig, TransactionStack defaultTxnProvider) {
     super(validateDatastoreServiceConfig(datastoreServiceConfig), defaultTxnProvider);
@@ -737,7 +749,12 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
 
   @Override
   public Future<Transaction> beginTransaction() {
-    return new FutureHelper.FakeFuture<Transaction>(beginTransactionInternal());
+    return beginTransaction(TransactionOptions.Builder.withDefaults());
+  }
+
+  @Override
+  public Future<Transaction> beginTransaction(TransactionOptions options) {
+    return new FutureHelper.FakeFuture<Transaction>(beginTransactionInternal(options));
   }
 
   @Override
@@ -795,7 +812,65 @@ class AsyncDatastoreServiceImpl extends BaseDatastoreServiceImpl
     };
   }
 
-  DatastoreAttributes.DatastoreType getDatastoreType() {
-    return getDatastoreAttributes().getDatastoreType();
+  
+  protected DatastoreType getDatastoreType() {
+    if (datastoreType == null) {
+      datastoreType = quietGet(getDatastoreAttributes()).getDatastoreType();
+    }
+    return datastoreType;
+  }
+  
+  
+  @Override
+  public Future<DatastoreAttributes> getDatastoreAttributes() {
+    return new FutureHelper.FakeFuture<DatastoreAttributes>(new DatastoreAttributes());
+  }
+
+  @Override
+  public Future<Map<Index, IndexState>> getIndexes() {
+    final String appId = DatastoreApiHelper.getCurrentAppId();
+    StringProto req = new StringProto();
+    req.setValue(appId);
+    return new FutureWrapper<CompositeIndices, Map<Index, IndexState>>(
+        makeAsyncCall(apiConfig, "GetIndices", req, new CompositeIndices())) {
+      @Override
+      protected Map<Index, IndexState> wrap(CompositeIndices indices) throws Exception {
+        Map<Index, IndexState> answer = new LinkedHashMap<Index, IndexState>();
+        for (CompositeIndex ci : indices.indexs()) {
+          String kind = ci.getDefinition().getEntityType();
+          boolean isAncestor = ci.getDefinition().isAncestor();
+          List<Property> properties = new ArrayList<Property>(ci.getDefinition().propertySize());
+          for (com.google.storage.onestore.v3.OnestoreEntity.Index.Property p :
+              ci.getDefinition().propertys()) {
+            properties.add(
+                new Property(p.getName(), SortDirection.valueOf(p.getDirectionEnum().name())));
+          }
+          Index index = new Index(ci.getId(), kind, isAncestor, properties);
+          switch (ci.getStateEnum()) {
+            case DELETED:
+              answer.put(index, IndexState.DELETING);
+              break;
+            case ERROR:
+              answer.put(index, IndexState.ERROR);
+              break;
+            case READ_WRITE:
+              answer.put(index, IndexState.SERVING);
+              break;
+            case WRITE_ONLY:
+              answer.put(index, IndexState.BUILDING);
+              break;
+            default:
+              logger.log(Level.WARNING, "Unrecognized index state for " + index); 
+              break;
+          }
+        }
+        return answer;
+      }
+
+      @Override
+      protected Throwable convertException(Throwable cause) {
+        return cause;
+      }      
+    };
   }
 }

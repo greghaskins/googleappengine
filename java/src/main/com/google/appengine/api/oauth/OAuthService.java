@@ -18,6 +18,15 @@ public interface OAuthService {
   User getCurrentUser() throws OAuthRequestException;
 
   /**
+   * Returns the {@link User} on whose behalf the request was made.
+   * @param scope The customs OAuth scope that is accepted.
+   *
+   * @throws OAuthRequestException If the request was not a valid OAuth request.
+   * @throws OAuthServiceFailureException If an unknown OAuth error occurred.
+   */
+  User getCurrentUser(String scope) throws OAuthRequestException;
+
+  /**
    * Returns true if the user on whose behalf the request was made is an admin
    * for this application, false otherwise.
    *

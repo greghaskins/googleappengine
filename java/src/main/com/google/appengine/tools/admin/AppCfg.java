@@ -53,6 +53,8 @@ public class AppCfg {
   private String compileEncoding = null;
   private final String prefsEmail;
   private LoginReader loginReader = null;
+  private String overrideAppId;
+  private String overrideAppVersion;
 
   public static void main(String[] args) {
     Logging.initializeLogging();
@@ -117,7 +119,8 @@ public class AppCfg {
         factory.setCompileEncoding(compileEncoding);
       }
       System.out.println("Reading application configuration data...");
-      Application app = Application.readApplication(applicationDirectory);
+      Application app = Application.readApplication(applicationDirectory, overrideAppId,
+        overrideAppVersion);
 
       app.setListener(new UpdateListener() {
           public void onProgress(UpdateProgressEvent event) {
@@ -258,7 +261,11 @@ public class AppCfg {
     + "                        Proxies HTTPS requests through the given proxy server.\n"
     + "  --sdk_root=root       Overrides where the SDK is located.\n"
     + "  --passin              Always read the login password from stdin.\n"
-    + "  --insecure            Do not use HTTPS to communicate with the Admin Console.\n";
+    + "  --insecure            Do not use HTTPS to communicate with the Admin Console.\n"
+    + "  -A APP_ID, --application=APP_ID\n"
+    + "                        Override application id from appengine-web.xml.\n"
+    + "  -V VERSION, --version=VERSION\n"
+    + "                        Override (major) version from appengine-web.xml.\n";
 
   private static final String UPDATE_OPTION_HELP =
       "  --enable_jar_splitting\n"
@@ -294,6 +301,7 @@ public class AppCfg {
     String help = "usage: AppCfg [options] <action> <app-dir> [<argument>]\n"
         + "\n" + "Action must be one of:\n"
         + "  help: Print help for a specific action.\n"
+        + "  download_app: Download a previously uploaded app version.\n"
         + "  request_logs: Write request logs in Apache common log format.\n"
         + "  rollback: Rollback an in-progress update.\n"
         + "  update: Create or update an app version.\n"
@@ -497,6 +505,20 @@ public class AppCfg {
         public void apply() {
           disablePrompt = true;
         }
+      },
+
+      new Option("A", "application", false) {
+        @Override
+        public void apply() {
+          overrideAppId = getValue();
+        }
+      },
+
+      new Option("V", "version" , false) {
+        @Override
+        public void apply() {
+          overrideAppVersion = getValue();
+        }
       });
 
   private final List<Action> actions = Arrays.<Action>asList(
@@ -510,6 +532,7 @@ public class AppCfg {
       new CronInfoAction(),
       new VacuumIndexesAction(),
       new HelpAction(),
+      new DownloadAppAction(),
       new VersionAction(),
       new BackendsListAction(),
       new BackendsRollbackAction(),
@@ -826,6 +849,41 @@ public class AppCfg {
     public String getHelpString() {
       return "AppCfg help <command>\n\n" +
           "Prints help about a specific command.\n";
+    }
+  }
+
+  class DownloadAppAction extends AppCfgAction {
+    DownloadAppAction() {
+      super("download_app");
+    }
+    @Override
+    public void apply() {
+      if (getArgs().size() != 1) {
+        throw new IllegalArgumentException("Expected download directory"
+            + " as an argument after download_app.");
+      }
+      File downloadDir = new File(getArgs().get(0));
+      if (overrideAppId == null) {
+        throw new IllegalArgumentException("You must specify an app ID via -A or --application");
+      }
+
+      loadCookies(options);
+      AppDownload appDownload =
+        new AppDownload(ServerConnectionFactory.getServerConnection(options),
+          new AppCfgListener("download_app"));
+      int exitCode = appDownload.download(overrideAppId, overrideAppVersion, downloadDir) ? 0 : 1;
+      System.exit(exitCode);
+    }
+    @Override
+    public void execute() {
+    }
+    @Override
+    public String getHelpString() {
+      return "AppCfg [options] -A app_id [ -V version ] download_app <out-dir>\n\n"
+        + "Download a previously-uploaded app to the specified directory.  The app\n"
+        + "ID is specified by the \"-A\" option.  The optional version is specified\n"
+        + "by the \"-V\" option.\n\n"
+        + "Options:\n" + GENERAL_OPTION_HELP;
     }
   }
 

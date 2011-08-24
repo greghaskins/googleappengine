@@ -164,18 +164,24 @@ public abstract class AbstractServerConnection implements ServerConnection {
     return send(GET, url, null, null, params);
   }
 
-  protected BufferedReader getReader(HttpURLConnection conn) {
+  private InputStream getInputStream(HttpURLConnection conn) {
     InputStream is;
     try {
-      is = conn.getInputStream();
+      return conn.getInputStream();
     } catch (IOException ex) {
-      is = conn.getErrorStream();
+      return conn.getErrorStream();
     }
+  }
+
+  private BufferedReader getReader(InputStream is) {
     if (is == null) {
       return null;
     }
-    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-    return reader;
+    return new BufferedReader(new InputStreamReader(is));
+  }
+
+  protected BufferedReader getReader(HttpURLConnection conn) {
+    return getReader(getInputStream(conn));
   }
 
   public String post(String url, File payload, String contentType, Map<String, String> params)
@@ -204,11 +210,39 @@ public abstract class AbstractServerConnection implements ServerConnection {
     return send(POST, url, new StringPoster(payload), null, paramMap);
   }
 
+  /**
+   * Returns an input stream that reads from this open connection. If the server returned
+   * an error (404, etc), return the error stream instead.
+   *
+   * @return {@code InputStream} for the server response.
+   */
+  @Override
+  public InputStream postAndGetInputStream(String url, String payload, String... params)
+    throws IOException {
+    Map<String, String> paramMap = new HashMap<String, String>();
+    for (int i = 0; i < params.length; i += 2) {
+      paramMap.put(params[i], params[i + 1]);
+    }
+    return send1(POST, url, new StringPoster(payload), null, paramMap);
+  }
+
   protected HttpURLConnection openConnection(URL url) throws IOException {
     return (HttpURLConnection) url.openConnection();
   }
 
   protected String send(String method, String path, DataPoster payload, String content_type,
+                        Map<String, String> params) throws IOException {
+    BufferedReader reader = getReader(send1(method, path, payload, content_type, params));
+    StringBuffer response = new StringBuffer();
+    String line = null;
+    while ((line = reader.readLine()) != null) {
+      response.append(line);
+      response.append("\n");
+    }
+    return response.toString();
+  }
+
+  private InputStream send1(String method, String path, DataPoster payload, String content_type,
       Map<String, String> params) throws IOException {
 
     URL url = buildURL(path + '?' + buildQuery(params));
@@ -230,17 +264,11 @@ public abstract class AbstractServerConnection implements ServerConnection {
       IOException ioe = connect(method, conn, payload);
 
       int status = conn.getResponseCode();
-      BufferedReader reader = getReader(conn);
 
       if (status == HttpURLConnection.HTTP_OK) {
-        StringBuffer response = new StringBuffer();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-          response.append(line);
-          response.append("\n");
-        }
-        return response.toString();
+        return getInputStream(conn);
       } else {
+        BufferedReader reader = getReader(conn);
         logger.finer("Got http error " + status + ". this is try #" + tries);
         if (++tries > MAX_SEND_TRIES) {
           throw new IOException(constructHttpErrorMessage(conn, reader));

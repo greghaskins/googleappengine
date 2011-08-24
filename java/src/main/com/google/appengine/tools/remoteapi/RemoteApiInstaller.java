@@ -34,7 +34,8 @@ import java.util.regex.Pattern;
  *
  */
 public class RemoteApiInstaller {
-  private static final Pattern PAIR_REGEXP = Pattern.compile("([a-z0-9_-]+): +([~a-z0-9_-]+)");
+  private static final Pattern PAIR_REGEXP =
+      Pattern.compile("([a-z0-9_-]+): +'?([:~.a-z0-9_-]+)'?");
 
   private static ConsoleHandler remoteMethodHandler;
 

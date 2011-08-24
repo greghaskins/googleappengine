@@ -30,16 +30,22 @@ import com.google.apphosting.utils.config.QueueYamlReader;
 import com.google.apphosting.utils.config.WebXml;
 import com.google.apphosting.utils.config.WebXmlReader;
 
+import org.mortbay.io.Buffer;
+import org.mortbay.jetty.MimeTypes;
 import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,6 +81,8 @@ public class Application {
 
   private static final Logger logger = Logger.getLogger(Application.class.getName());
 
+  private static final MimeTypes mimeTypes = new MimeTypes();
+
   private AppEngineWebXml appEngineWebXml;
   private WebXml webXml;
   private CronXml cronXml;
@@ -85,6 +93,7 @@ public class Application {
   private File baseDir;
   private File stageDir;
   private String apiVersion;
+  private String appYaml;
 
   private UpdateListener listener;
   private PrintWriter detailsWriter;
@@ -94,7 +103,7 @@ public class Application {
   protected Application(){
   }
 
-  private Application(String explodedPath) {
+  private Application(String explodedPath, String appId, String appVersion) {
     this.baseDir = new File(explodedPath);
     explodedPath = baseDir.getPath();
     if (File.separatorChar == '\\') {
@@ -113,6 +122,12 @@ public class Application {
     validateXml(aewebReader.getFilename(), new File(getSdkDocsDir(), "appengine-web.xsd"));
     appEngineWebXml = aewebReader.readAppEngineWebXml();
     appEngineWebXml.setSourcePrefix(explodedPath);
+    if (appId != null) {
+      appEngineWebXml.setAppId(appId);
+    }
+    if (appVersion != null) {
+      appEngineWebXml.setMajorVersionId(appVersion);
+    }
 
     webXml = webXmlReader.readWebXml();
     webXml.validate();
@@ -160,13 +175,32 @@ public class Application {
    *
    * @param path a not {@code null} path.
    *
-   * @throws IOException if an error occurs while trying to read the {@code Application}
+   * @throws IOException if an error occurs while trying to read the
+   * {@code Application}.
    * @throws com.google.apphosting.utils.config.AppEngineConfigException if the
    * {@code Application's} appengine-web.xml file is malformed.
    */
   public static Application readApplication(String path)
       throws IOException {
-    return new Application(path);
+    return new Application(path, null, null);
+  }
+
+  /**
+   * Reads the App Engine application from {@code path}. The path may either
+   * be a WAR file or the root of an exploded WAR directory.
+   *
+   * @param path a not {@code null} path.
+   * @param appId if non-null, use this as an application id override.
+   * @param appVersion if non-null, use this as an application version override.
+   *
+   * @throws IOException if an error occurs while trying to read the
+   * {@code Application}.
+   * @throws com.google.apphosting.utils.config.AppEngineConfigException if the
+   * {@code Application's} appengine-web.xml file is malformed.
+   */
+  public static Application readApplication(String path, String appId, String appVersion)
+      throws IOException {
+    return new Application(path, appId, appVersion);
   }
 
   /**
@@ -183,6 +217,53 @@ public class Application {
    */
   public String getVersion() {
     return appEngineWebXml.getMajorVersionId();
+  }
+
+  public boolean isPrecompilationEnabled() {
+    return appEngineWebXml.getPrecompilationEnabled();
+  }
+
+  public List<ErrorHandler> getErrorHandlers() {
+    class ErrorHandlerImpl implements ErrorHandler {
+      private AppEngineWebXml.ErrorHandler errorHandler;
+      public ErrorHandlerImpl(AppEngineWebXml.ErrorHandler errorHandler) {
+        this.errorHandler = errorHandler;
+      }
+      @Override
+      public String getFile() {
+        return "__static__/" + errorHandler.getFile();
+      }
+      @Override
+      public String getErrorCode() {
+        return errorHandler.getErrorCode();
+      }
+      @Override
+      public String getMimeType() {
+        return getMimeTypeIfStatic(getFile());
+      }
+    }
+    List<ErrorHandler> errorHandlers = new ArrayList<ErrorHandler>();
+    for (AppEngineWebXml.ErrorHandler errorHandler: appEngineWebXml.getErrorHandlers()) {
+      errorHandlers.add(new ErrorHandlerImpl(errorHandler));
+    }
+    return errorHandlers;
+  }
+
+  public String getMimeTypeIfStatic(String path) {
+    if (!path.contains("__static__/")) {
+      return null;
+    }
+    String mimeType = webXml.getMimeTypeForPath(path);
+    if (mimeType != null) {
+      return mimeType;
+    }
+    Buffer buffer = mimeTypes.getMimeByExtension(path);
+    String mimeTypeGuess;
+    if (buffer != null) {
+      return new String(buffer.asArray());
+    } else {
+      return "application/octet-stream";
+    }
   }
 
   /**
@@ -246,7 +327,7 @@ public class Application {
    *
    * @throws IllegalStateException if createStagingDirectory has not been called.
    */
-  String getApiVersion() {
+  public String getApiVersion() {
     if (apiVersion == null) {
       throw new IllegalStateException("Must call createStagingDirectory first.");
     }
@@ -270,7 +351,7 @@ public class Application {
     return stageDir;
   }
 
-  void resetProgress() {
+  public void resetProgress() {
     updateProgress = 0;
     progressAmount = 0;
   }
@@ -283,7 +364,7 @@ public class Application {
    * @return staging directory
    * @throws IOException
    */
-  File createStagingDirectory(ApplicationProcessingOptions opts)
+  public File createStagingDirectory(ApplicationProcessingOptions opts)
       throws IOException {
     if (stageDir != null) {
       return stageDir;
@@ -316,6 +397,17 @@ public class Application {
 
     apiVersion = findApiVersion(stageDir, true);
 
+    appYaml = generateAppYaml(stageDir);
+
+    if (GenerationDirectory.getGenerationDirectory(stageDir).mkdirs()) {
+      writePreparedYamlFile("app", appYaml);
+      writePreparedYamlFile("backends", backendsXml == null ? null : backendsXml.toYaml());
+      writePreparedYamlFile("index", indexesXml.size() == 0 ? null : indexesXml.toYaml());
+      writePreparedYamlFile("cron", cronXml == null ? null : cronXml.toYaml());
+      writePreparedYamlFile("queue", queueXml == null ? null : queueXml.toYaml());
+      writePreparedYamlFile("dos", dosXml == null ? null : dosXml.toYaml());
+    }
+
     if (opts.isSplitJarsSet()) {
       splitJars(new File(new File(stageDir, "WEB-INF"), "lib"),
                 opts.getMaxJarSize(), opts.getJarSplittingExcludes());
@@ -324,6 +416,18 @@ public class Application {
     checkFileSizes(stageDir, AppAdminFactory.MAX_FILE_UPLOAD);
 
     return stageDir;
+  }
+
+  /**
+   * Write yaml file to generation subdirectory within stage directory.
+   */
+  private void writePreparedYamlFile(String yamlName, String yamlString) throws IOException {
+    File f = new File(GenerationDirectory.getGenerationDirectory(stageDir), yamlName + ".yaml");
+    if (yamlString != null  && f.createNewFile()) {
+      FileWriter fw = new FileWriter(f);
+      fw.write(yamlString);
+      fw.close();
+    }
   }
 
   private static String findApiVersion(File baseDir, boolean deleteApiJars) {
@@ -690,11 +794,11 @@ public class Application {
     dead.delete();
   }
 
-  void setListener(UpdateListener l) {
+  public void setListener(UpdateListener l) {
     listener = l;
   }
 
-  void setDetailsWriter(PrintWriter detailsWriter) {
+  public void setDetailsWriter(PrintWriter detailsWriter) {
     this.detailsWriter = detailsWriter;
   }
 
@@ -721,5 +825,40 @@ public class Application {
       listener.onProgress(new UpdateProgressEvent(
                               Thread.currentThread(), message, updateProgress));
     }
+  }
+
+  private String generateAppYaml(File stageDir) {
+    Set<String> staticFiles = new HashSet<String>();
+    for (File f : new FileIterator(new File(stageDir, "__static__"))) {
+      staticFiles.add(Utility.calculatePath(f, stageDir));
+    }
+
+    AppYamlTranslator translator =
+        new AppYamlTranslator(getAppEngineWebXml(), getWebXml(), getBackendsXml(),
+                              getApiVersion(), staticFiles, null);
+    String yaml = translator.getYaml();
+    logger.fine("Generated app.yaml file:\n" + yaml);
+    return yaml;
+  }
+
+  /**
+   * Returns the app.yaml string.
+   *
+   * @throws IllegalStateException if createStagingDirectory has not been called.
+   */
+  public String getAppYaml() {
+    if (appYaml == null) {
+      throw new IllegalStateException("Must call createStagingDirectory first.");
+    }
+    return appYaml;
+  }
+
+  public interface ErrorHandler {
+    /** Returns the not {@code null} error handler file name. */
+    public abstract String getFile();
+    /** Returns the error code, possibly {@code null}. */
+    public abstract String getErrorCode();
+    /** Returns the not {@code null} error handler mime-type. */
+    public abstract String getMimeType();
   }
 }

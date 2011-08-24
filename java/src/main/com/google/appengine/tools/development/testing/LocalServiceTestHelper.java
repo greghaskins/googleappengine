@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,6 +67,10 @@ public class LocalServiceTestHelper {
   private Clock clock;
   private boolean enforceApiDeadlines = false;
   private boolean simulateProdLatencies = false;
+
+  private TimeZone timeZone = TimeZone.getTimeZone("UTC");
+
+  private TimeZone originalDefaultTimeZone;
 
   /**
    * Constructs a LocalServiceTestHelper with the provided configurations.
@@ -207,11 +212,26 @@ public class LocalServiceTestHelper {
   }
 
   /**
+   * Sets the time zone in which tests will execute.  If not set we use the
+   * same timezone that we use in production and the dev appserver: UTC
+   *
+   * @param timeZone the time zone
+   * @return {@code this} (for chaining)
+   */
+  public LocalServiceTestHelper setTimeZone(TimeZone timeZone) {
+    this.timeZone = timeZone;
+    return this;
+  }
+
+  /**
    * Set up an environment in which tests that use local services can execute.
    *
    * @return {@code this} (for chaining)
    */
   public final LocalServiceTestHelper setUp() {
+    originalDefaultTimeZone = TimeZone.getDefault();
+    TimeZone.setDefault(timeZone);
+
     ApiProxy.setEnvironmentForCurrentThread(newEnvironment());
     ApiProxyLocal proxyLocal = new ApiProxyLocalFactory().create(newLocalServerEnvironment());
     if (clock != null) {
@@ -379,26 +399,30 @@ public class LocalServiceTestHelper {
    * execute.
    */
   public final void tearDown() {
-    RuntimeException firstException = null;
-    for (LocalServiceTestConfig config : configs) {
-      try {
-        config.tearDown();
-      } catch (RuntimeException rte) {
-        if (firstException == null) {
-          firstException = rte;
-        } else {
-          logger.log(
-              Level.SEVERE,
-              "Received exception tearing down config of type " + config.getClass().getName(),
-              rte);
+    try {
+      RuntimeException firstException = null;
+      for (LocalServiceTestConfig config : configs) {
+        try {
+          config.tearDown();
+        } catch (RuntimeException rte) {
+          if (firstException == null) {
+            firstException = rte;
+          } else {
+            logger.log(
+                Level.SEVERE,
+                "Received exception tearing down config of type " + config.getClass().getName(),
+                rte);
+          }
         }
       }
+      if (firstException != null) {
+        throw firstException;
+      }
+      ApiProxy.setDelegate(null);
+      ApiProxy.setEnvironmentForCurrentThread(null);
+    } finally {
+      TimeZone.setDefault(originalDefaultTimeZone);
     }
-    if (firstException != null) {
-      throw firstException;
-    }
-    ApiProxy.setDelegate(null);
-    ApiProxy.setEnvironmentForCurrentThread(null);
   }
 
   /**

@@ -1,4 +1,5 @@
-// Copyright 2010 Google. All Rights Reserved.
+// Copyright 2010 Google Inc. All Rights Reserved.
+
 package com.google.appengine.api.datastore;
 
 import java.lang.reflect.UndeclaredThrowableException;
@@ -30,7 +31,7 @@ final class FutureHelper {
     try {
       return getInternal(future);
     } catch (ExecutionException e) {
-      return (T) processExecutionException(e);
+      throw propagateAsRuntimeException(e);
     }
   }
 
@@ -61,7 +62,7 @@ final class FutureHelper {
         E exception = (E) e.getCause();
         throw exception;
       }
-      return (T) processExecutionException(e);
+      throw propagateAsRuntimeException(e);
     }
   }
 
@@ -73,13 +74,20 @@ final class FutureHelper {
     }
   }
 
-  private static <T> T processExecutionException(ExecutionException e) {
-    if (e.getCause() instanceof RuntimeException) {
-      throw (RuntimeException) e.getCause();
-    } else if (e.getCause() instanceof Error) {
-      throw (Error) e.getCause();
+  /**
+   * Propagates the {@code cause} of the given {@link ExecutionException}
+   * as a RuntimeException.
+   *
+   * @return nothing will ever be returned; this return type is only for
+   *    convenience.
+   */
+  private static RuntimeException propagateAsRuntimeException(ExecutionException ee) {
+    if (ee.getCause() instanceof RuntimeException) {
+      throw (RuntimeException) ee.getCause();
+    } else if (ee.getCause() instanceof Error) {
+      throw (Error) ee.getCause();
     } else {
-      throw new UndeclaredThrowableException(e.getCause());
+      throw new UndeclaredThrowableException(ee.getCause());
     }
   }
 
@@ -126,7 +134,7 @@ final class FutureHelper {
     }
 
     @Override
-    final public V get()
+    public final V get()
         throws InterruptedException, ExecutionException {
       I result = initIntermediateResult();
       for (Future<K> future : futures) {
@@ -136,7 +144,7 @@ final class FutureHelper {
     }
 
     @Override
-    final public V get(long timeout, TimeUnit unit)
+    public final V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
       I result = initIntermediateResult();
       for (Future<K> future : futures) {
@@ -244,6 +252,7 @@ final class FutureHelper {
     }
 
     @Override
+    @SuppressWarnings("unused")
     public T get() throws ExecutionException {
       return result;
     }

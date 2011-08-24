@@ -303,7 +303,7 @@ public class AppAdminImpl implements AppAdmin {
       String backend) throws Exception {
     Constructor<? extends AppVersionUpload> constructor =
         appVersionUploadClass.getConstructor(ServerConnection.class, Application.class,
-            String.class, String.class);
-    return constructor.newInstance(connection, app, backend, null);
+            String.class);
+    return constructor.newInstance(connection, app, backend);
   }
 }
